@@ -1,12 +1,12 @@
 import express from "express";
-import { protect, authorize } from "../middleware/auth.middleware.js";
+import { protect, authorize } from "../middleware/auth.js";
 import {
   getAllDepartments,
   getDepartmentById,
   createDepartment,
   updateDepartment,
   deleteDepartment,
-} from "../controllers/department.js";
+} from "../controller/department.js";
 
 const router = express.Router();
 

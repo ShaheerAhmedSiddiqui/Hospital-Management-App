@@ -1,6 +1,6 @@
-const Appointment = require("../models/Appointment");
+import  Appointment from "../models/appointment.js";
 
-const bookAppointment = async (req, res) => {
+export const bookAppointment = async (req, res) => {
   try {
     const appt = await Appointment.create(req.body);
     res.status(201).json(appt);
@@ -9,7 +9,7 @@ const bookAppointment = async (req, res) => {
   }
 };
 
-const getAppointments = async (req, res) => {
+export const getAppointments = async (req, res) => {
   try {
     let filter = {};
 
@@ -26,7 +26,7 @@ const getAppointments = async (req, res) => {
   }
 };
 
-const getAppointmentById = async (req, res) => {
+export const getAppointmentById = async (req, res) => {
   try {
     const appt = await Appointment.findById(req.params.id);
 
@@ -40,7 +40,7 @@ const getAppointmentById = async (req, res) => {
   }
 };
 
-const updateStatus = async (req, res) => {
+export const updateStatus = async (req, res) => {
   try {
     const appt = await Appointment.findByIdAndUpdate(
       req.params.id,
@@ -58,7 +58,7 @@ const updateStatus = async (req, res) => {
   }
 };
 
-const cancelAppointment = async (req, res) => {
+export const cancelAppointment = async (req, res) => {
   try {
     const appt = await Appointment.findByIdAndDelete(req.params.id);
 
@@ -70,12 +70,4 @@ const cancelAppointment = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-};
-
-module.exports = {
-  bookAppointment,
-  getAppointments,
-  getAppointmentById,
-  updateStatus,
-  cancelAppointment,
 };

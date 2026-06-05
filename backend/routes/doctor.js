@@ -4,7 +4,7 @@ import {
   getAllDoctors,
   getDoctorById,
   updateDoctor,
-} from "../controllers/doctor.js";
+} from "../controller/doctor.js";
 
 const router = express.Router();
 

@@ -1,9 +1,9 @@
-const User = require("../models/User");
-const Doctor = require("../models/Doctor");
-const Patient = require("../models/Patient");
-const Appointment = require("../models/Appointment");
+import User from "../models/user.js";
+import Doctor  from "../models/doctor.js";
+import Patient from "../models/patient.js";
+import Appointment from "../models/appointment.js";
 
-const getDashboardStats = async (req, res) => {
+export const getDashboardStats = async (req, res) => {
   try {
     const [totalUsers, totalDoctors, totalPatients, totalAppointments] =
       await Promise.all([
@@ -24,7 +24,7 @@ const getDashboardStats = async (req, res) => {
   }
 };
 
-const getAllUsers = async (req, res) => {
+export const getAllUsers = async (req, res) => {
   try {
     const users = await User.find().select("-password");
     res.json(users);
@@ -33,7 +33,7 @@ const getAllUsers = async (req, res) => {
   }
 };
 
-const toggleUserStatus = async (req, res) => {
+export const toggleUserStatus = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
 
@@ -51,10 +51,4 @@ const toggleUserStatus = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-};
-
-module.exports = {
-  getDashboardStats,
-  getAllUsers,
-  toggleUserStatus,
 };

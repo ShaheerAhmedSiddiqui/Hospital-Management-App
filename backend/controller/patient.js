@@ -1,6 +1,6 @@
-const Patient = require("../models/Patient");
+import Patient from "../models/patient.js";
 
-const getAllPatients = async (req, res) => {
+export const getAllPatients = async (req, res) => {
   try {
     const patients = await Patient.find().populate("userId", "name email phone");
     res.json(patients);
@@ -9,7 +9,7 @@ const getAllPatients = async (req, res) => {
   }
 };
 
-const getPatientById = async (req, res) => {
+export const getPatientById = async (req, res) => {
   try {
     const patient = await Patient.findById(req.params.id).populate(
       "userId",
@@ -26,7 +26,7 @@ const getPatientById = async (req, res) => {
   }
 };
 
-const updatePatient = async (req, res) => {
+export const updatePatient = async (req, res) => {
   try {
     const patient = await Patient.findByIdAndUpdate(
       req.params.id,
@@ -44,7 +44,7 @@ const updatePatient = async (req, res) => {
   }
 };
 
-const deletePatient = async (req, res) => {
+export const deletePatient = async (req, res) => {
   try {
     const patient = await Patient.findByIdAndDelete(req.params.id);
 
@@ -56,11 +56,4 @@ const deletePatient = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-};
-
-module.exports = {
-  getAllPatients,
-  getPatientById,
-  updatePatient,
-  deletePatient,
 };

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const slotSchema = mongoose.Schema({
+const slotSchema = new mongoose.Schema({
     day:{
         type: String,
         enum: ['Mon', 'Tue', 'Wed', 'Thur', 'Fri', 'Sat', 'Sun']
@@ -13,7 +13,7 @@ const slotSchema = mongoose.Schema({
     }
 });
 
-const doctorSchema = mongoose.Schema({
+const doctorSchema = new mongoose.Schema({
     UserId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -40,4 +40,5 @@ const doctorSchema = mongoose.Schema({
     timestamps: true
 });
 
-module.export = mongoose.model("Doctor" = doctorSchema);
+const Doctor = mongoose.model("Doctor", doctorSchema);
+export default Doctor;

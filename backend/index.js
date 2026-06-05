@@ -1,20 +1,33 @@
 import express from "express";
-import mongoose from "mongoose";
 import dotenv from "dotenv";
 
-import authRoutes from "./routes/authRoutes.js";
-import doctorRoutes from "./routes/doctorRoutes.js";
-import patientRoutes from "./routes/patientRoutes.js";
-import appointmentRoutes from "./routes/appointmentRoutes.js";
-import departmentRoutes from "./routes/departmentRoutes.js";
-import adminRoutes from "./routes/adminRoutes.js";
+import connectDB from "./config/db.js";
 
+import authRoutes from "./routes/auth.js";
+import doctorRoutes from "./routes/doctor.js";
+import patientRoutes from "./routes/patient.js";
+import appointmentRoutes from "./routes/appointment.js";
+import departmentRoutes from "./routes/department.js";
+import adminRoutes from "./routes/admin.js";
+
+// Load environment variables
 dotenv.config();
+
+// Connect Database
+connectDB();
 
 const app = express();
 
 // Middleware
 app.use(express.json());
+
+// Check Route
+app.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Hospital Management API is running",
+  });
+});
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -24,21 +37,9 @@ app.use("/api/appointments", appointmentRoutes);
 app.use("/api/departments", departmentRoutes);
 app.use("/api/admin", adminRoutes);
 
-// Test Route
-app.get("/", (req, res) => {
-    res.json({ message: "Server is running" });
+// Start Server
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
-
-// Database Connection
-mongoose
-    .connect(process.env.MONGO_URI)
-    .then(() => {
-        console.log("MongoDB Connected");
-
-        app.listen(process.env.PORT || 5000, () => {
-            console.log(`Server running on port ${process.env.PORT || 5000}`);
-        });
-    })
-    .catch((err) => {
-        console.error("Database Connection Error:", err);
-    });

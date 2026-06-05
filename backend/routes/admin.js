@@ -4,7 +4,7 @@ import {
   getDashboardStats,
   getAllUsers,
   toggleUserStatus,
-} from "../controllers/admin.js";
+} from "../controller/admin.js";
 
 const router = express.Router();
 

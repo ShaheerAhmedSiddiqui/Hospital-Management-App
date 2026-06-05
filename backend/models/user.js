@@ -1,22 +1,22 @@
 import mongoose from "mongoose";
 import bcrypt from 'bcryptjs';
 
-const userSchema =  mongoose.Schema({
+const userSchema = new mongoose.Schema({
     name :{
         type: String,
         required: true
     },
     email: {
-        type: email,
+        type: String,
         required: true
     },
     password: {
-        type: password,
+        type: String,
         required: true
     },
     role: {
         type: String,
-        enum: ['patient, doctor, admin'],
+        enum: ['patient', 'doctor', 'admin'],
        required: true
     },
     specialization: {
@@ -33,14 +33,14 @@ const userSchema =  mongoose.Schema({
     timestamps: true
 })
 
-userSchema.pre('save', async function (next) {
-    if(!this.isModified('password')) return next();
-    this.password = await bcrypt.hash(this.password, 10);
-    next();
+userSchema.pre('save', async function () {
+  if (!this.isModified('password')) return ;
+  this.password = await bcrypt.hash(this.password, 10);
 });
 
 userSchema.methods.matchPassword = async function (enteredPassword) {
-    return await bcrypt.compare(enteredPassword, this.password);
-}
+  return await bcrypt.compare(enteredPassword, this.password);
+};
 
-module.exports = mongoose.model("User", userSchema);
+const User = mongoose.model("User", userSchema);
+export default User;

@@ -1,6 +1,6 @@
-const Doctor = require("../models/Doctor");
+import Doctor from "../models/doctor.js";
 
-const getAllDoctors = async (req, res) => {
+export const getAllDoctors = async (req, res) => {
   try {
     const doctors = await Doctor.find().populate("userId", "name email phone");
     res.json(doctors);
@@ -9,7 +9,7 @@ const getAllDoctors = async (req, res) => {
   }
 };
 
-const getDoctorById = async (req, res) => {
+export const getDoctorById = async (req, res) => {
   try {
     const doctor = await Doctor.findById(req.params.id).populate(
       "userId",
@@ -26,7 +26,7 @@ const getDoctorById = async (req, res) => {
   }
 };
 
-const createDoctor = async (req, res) => {
+export const createDoctor = async (req, res) => {
   try {
     const doctor = await Doctor.create(req.body);
     res.status(201).json(doctor);
@@ -35,7 +35,7 @@ const createDoctor = async (req, res) => {
   }
 };
 
-const updateDoctor = async (req, res) => {
+export const updateDoctor = async (req, res) => {
   try {
     const doctor = await Doctor.findByIdAndUpdate(
       req.params.id,
@@ -53,7 +53,7 @@ const updateDoctor = async (req, res) => {
   }
 };
 
-const deleteDoctor = async (req, res) => {
+export const deleteDoctor = async (req, res) => {
   try {
     const doctor = await Doctor.findByIdAndDelete(req.params.id);
 
@@ -65,12 +65,4 @@ const deleteDoctor = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-};
-
-module.exports = {
-  getAllDoctors,
-  getDoctorById,
-  createDoctor,
-  updateDoctor,
-  deleteDoctor,
 };

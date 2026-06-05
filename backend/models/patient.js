@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const patientSchema = mongoose.Schema({
+const patientSchema = new mongoose.Schema({
     userId : {
         type : mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -24,4 +24,5 @@ const patientSchema = mongoose.Schema({
     timestamps: true
 });
 
-module.exports = mongoose.model("Patient", patientSchema);
+const Patient = mongoose.model("Patient", patientSchema);
+export default Patient;

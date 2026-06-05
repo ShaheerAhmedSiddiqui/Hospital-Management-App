@@ -1,6 +1,6 @@
-const Department = require("../models/Department");
+import Department from "../models/department.js";
 
-const getAllDepartments = async (req, res) => {
+export const getAllDepartments = async (req, res) => {
   try {
     const depts = await Department.find().populate("head", "specialization");
     res.json(depts);
@@ -9,7 +9,7 @@ const getAllDepartments = async (req, res) => {
   }
 };
 
-const getDepartmentById = async (req, res) => {
+export const getDepartmentById = async (req, res) => {
   try {
     const dept = await Department.findById(req.params.id);
 
@@ -23,7 +23,7 @@ const getDepartmentById = async (req, res) => {
   }
 };
 
-const createDepartment = async (req, res) => {
+export const createDepartment = async (req, res) => {
   try {
     const dept = await Department.create(req.body);
     res.status(201).json(dept);
@@ -32,7 +32,7 @@ const createDepartment = async (req, res) => {
   }
 };
 
-const updateDepartment = async (req, res) => {
+export const updateDepartment = async (req, res) => {
   try {
     const dept = await Department.findByIdAndUpdate(
       req.params.id,
@@ -50,7 +50,7 @@ const updateDepartment = async (req, res) => {
   }
 };
 
-const deleteDepartment = async (req, res) => {
+export const deleteDepartment = async (req, res) => {
   try {
     const dept = await Department.findByIdAndDelete(req.params.id);
 
@@ -62,12 +62,4 @@ const deleteDepartment = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-};
-
-module.exports = {
-  getAllDepartments,
-  getDepartmentById,
-  createDepartment,
-  updateDepartment,
-  deleteDepartment,
 };

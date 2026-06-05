@@ -5,7 +5,7 @@ import {
   getAppointments,
   updateStatus,
   cancelAppointment,
-} from "../controllers/appointment.js";
+} from "../controller/appointment.js";
 
 const router = express.Router();
 

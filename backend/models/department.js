@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const departmentSchema = mongoose.Schema({
+const departmentSchema = new mongoose.Schema({
   name: { 
     type: String, 
     required: true, 
@@ -10,9 +10,10 @@ const departmentSchema = mongoose.Schema({
     type: String 
 },
   headDoctorId: { 
-    type: Schema.Types.ObjectId, 
+    type: mongoose.Schema.Types.ObjectId, 
     ref: 'Doctor' 
 },
 }, { timestamps: true });
 
-module.export = mongoose.model('Department', departmentSchema);
+const Department = mongoose.model('Department', departmentSchema);
+export default Department;

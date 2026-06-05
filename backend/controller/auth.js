@@ -1,6 +1,6 @@
-const jwt = require("jsonwebtoken");
-const User = require("../models/User");
 
+import jwt from "jsonwebtoken";
+import User from "../models/user.js"
 //  TOKEN 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -9,9 +9,9 @@ const generateToken = (id) => {
 };
 
 //  REGISTER 
-const register = async (req, res) => {
+export const register = async (req, res, next) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, specialization } = req.body;
 
     // check missing fields
     if (!name || !email || !password) {
@@ -30,6 +30,7 @@ const register = async (req, res) => {
       email,
       password,
       role,
+      specialization,
     });
 
     res.status(201).json({
@@ -37,6 +38,7 @@ const register = async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      specialization: user.specialization,
       token: generateToken(user._id),
     });
   } catch (err) {
@@ -45,7 +47,7 @@ const register = async (req, res) => {
 };
 
 // LOGIN 
-const login = async (req, res) => {
+export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -79,20 +81,13 @@ const login = async (req, res) => {
 };
 
 // GET LOGGED IN USER 
-const getMe = async (req, res) => {
+export const getMe = async (req, res) => {
   try {
     if (!req.user) {
       return res.status(401).json({ message: "Not authorized" });
     }
-
     res.json(req.user);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
-};
-
-module.exports = {
-  register,
-  login,
-  getMe,
 };
