@@ -1,6 +1,5 @@
+import 'dotenv/config';
 import express from "express";
-import dotenv from "dotenv";
-
 import connectDB from "./config/db.js";
 
 import authRoutes from "./routes/auth.js";
@@ -10,8 +9,6 @@ import appointmentRoutes from "./routes/appointment.js";
 import departmentRoutes from "./routes/department.js";
 import adminRoutes from "./routes/admin.js";
 
-// Load environment variables
-dotenv.config();
 
 // Connect Database
 connectDB();

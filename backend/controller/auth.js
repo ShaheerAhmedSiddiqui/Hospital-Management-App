@@ -1,6 +1,11 @@
 
 import jwt from "jsonwebtoken";
 import User from "../models/user.js"
+import crypto from "crypto";
+import DoctorRequest from "../models/DoctorRequest.js";
+import { sendEmail } from "../utils/sendEmail.js";
+import Doctor from "../models/doctor.js";
+
 //  TOKEN 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -10,12 +15,15 @@ const generateToken = (id) => {
 
 //  REGISTER 
 export const register = async (req, res, next) => {
+  const { name, email, password, role, specialization } = req.body;
   try {
-    const { name, email, password, role, specialization } = req.body;
-
     // check missing fields
     if (!name || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
+    }
+
+    if (role === 'admin') {
+      return res.status(403).json({ message: 'Cannot self-register as admin' });
     }
 
     // check user exists
@@ -80,6 +88,17 @@ export const login = async (req, res) => {
   }
 };
 
+//create admin
+export const createAdmin = async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+    const user = await User.create({ name, email, password, role: 'admin' });
+    res.status(201).json({ _id: user._id, name: user.name, role: user.role });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
+
 // GET LOGGED IN USER 
 export const getMe = async (req, res) => {
   try {
@@ -87,6 +106,155 @@ export const getMe = async (req, res) => {
       return res.status(401).json({ message: "Not authorized" });
     }
     res.json(req.user);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
+export const doctorRegisterRequest = async (req, res) => {
+  const { name, email, address, specialization } = req.body;
+
+  try {
+    // check if already requested
+    const existing = await DoctorRequest.findOne({ email });
+    if (existing) {
+      return res.status(400).json({ message: 'A request with this email already exists' });
+    }
+
+    // generate email verification token
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    const request = await DoctorRequest.create({
+      name, email, address, specialization,
+      emailVerifyToken: token,
+      emailVerifyExpires: expires,
+    });
+
+    // send verification email
+    const verifyUrl = `http://localhost:5000/api/auth/verify-email/${token}`;
+    await sendEmail({
+      to: email,
+      subject: 'Verify your email — Hospital System',
+      html: `
+        <h2>Hello Dr. ${name},</h2>
+        <p>Thank you for registering. Please verify your email to submit your request for admin approval.</p>
+        <a href="${verifyUrl}" style="padding:10px 20px;background:#4F46E5;color:white;border-radius:6px;text-decoration:none;">
+          Verify Email
+        </a>
+        <p>This link expires in 24 hours.</p>
+      `,
+    });
+
+    res.status(201).json({
+      message: 'Registration request submitted. Please check your email to verify.',
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// GET /api/auth/verify-email/:token
+export const verifyDoctorEmail = async (req, res) => {
+  try {
+    const request = await DoctorRequest.findOne({
+      emailVerifyToken: req.params.token,
+      emailVerifyExpires: { $gt: Date.now() },  // not expired
+    });
+
+    if (!request) {
+      return res.status(400).json({ message: 'Token is invalid or has expired' });
+    }
+
+    request.emailStatus = 'email_verified';
+    request.emailVerifyToken = undefined;
+    request.emailVerifyExpires = undefined;
+    await request.save();
+
+    res.json({ message: 'Email verified successfully. Please wait for admin approval.' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const setupDoctorAccount = async (req, res) => {
+  const { password, confirmPassword } = req.body;
+
+  try {
+    if (!password || !confirmPassword) {
+      return res.status(400).json({ message: 'Both password fields are required' });
+    }
+    if (password !== confirmPassword) {
+      return res.status(400).json({ message: 'Passwords do not match' });
+    }
+
+    // find valid non-expired token
+    const request = await DoctorRequest.findOne({
+      setupToken: req.params.token,
+      setupTokenExpires: { $gt: Date.now() },
+      approvalStatus: 'registeration_approved',
+    });
+
+    if (!request) {
+      return res.status(400).json({
+        message: 'Setup link is invalid or has expired. Please contact admin.',
+      });
+    }
+
+    // create User account with doctor's own password
+    const user = await User.create({
+      name: request.name,
+      email: request.email,
+      specialization: request.specialization,
+      password,
+      role: 'doctor',
+    });
+
+    // create Doctor profile
+    await Doctor.create({
+      UserId: user._id,
+      specialization: request.specialization,
+      fees: 2500,
+      experience: "10+year",
+      availableSlots: [
+        {
+          "day": "Mon",
+          "startTime": "04:00 PM",
+          "endTime": "06:00 PM"
+        },
+        {
+          "day": "Tue",
+          "startTime": "04:00 PM",
+          "endTime": "06:00 PM"
+        },
+      ]
+    });
+
+    // mark request as account_created and clear token
+    request.approvalStatus = 'account_created';
+    request.setupToken = undefined;
+    request.setupTokenExpires = undefined;
+
+    await sendEmail({
+      to: email,
+      subject: 'Welcome to the Hospital System! Account Created', 
+      html: `
+    <h2>Hello Dr. ${name},</h2>
+    <p>Your professional account has been successfully set up and is ready to use.</p>
+    <p>You can now log in to your dashboard using your email and the password you just created.</p>
+    <a href="http://localhost:5173/login" style="padding:10px 20px;background:#10B981;color:white;border-radius:6px;text-decoration:none;display:inline-block;">
+      Login to Dashboard
+    </a>
+  `,
+    });
+
+    await request.save();
+
+    res.json({
+      message: 'Account created successfully. You can now login.',
+    });
+
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
