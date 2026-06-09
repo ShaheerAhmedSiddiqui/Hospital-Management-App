@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import cors from 'cors'; 
 import express from "express";
 import connectDB from "./config/db.js";
 
@@ -10,6 +11,7 @@ import departmentRoutes from "./routes/department.js";
 import adminRoutes from "./routes/admin.js";
 
 
+
 // Connect Database
 connectDB();
 
@@ -17,6 +19,11 @@ const app = express();
 
 // Middleware
 app.use(express.json());
+
+app.use(cors({
+  origin: 'http://localhost:5173', 
+  credentials: true                
+}));
 
 // Check Route
 app.get("/", (req, res) => {

@@ -1,4 +1,3 @@
-
 import jwt from "jsonwebtoken";
 import User from "../models/user.js"
 import crypto from "crypto";
@@ -17,7 +16,6 @@ const generateToken = (id) => {
 export const register = async (req, res, next) => {
   const { name, email, password, role, specialization } = req.body;
   try {
-    // check missing fields
     if (!name || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
@@ -26,13 +24,11 @@ export const register = async (req, res, next) => {
       return res.status(403).json({ message: 'Cannot self-register as admin' });
     }
 
-    // check user exists
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // create user (password hashing should be in model middleware)
     const user = await User.create({
       name,
       email,
@@ -69,7 +65,6 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    // uses schema method
     const isMatch = await user.matchPassword(password);
 
     if (!isMatch) {
@@ -88,7 +83,7 @@ export const login = async (req, res) => {
   }
 };
 
-//create admin
+// Create Admin
 export const createAdmin = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -111,18 +106,16 @@ export const getMe = async (req, res) => {
   }
 };
 
-
+// DOCTOR REGISTER REQUEST
 export const doctorRegisterRequest = async (req, res) => {
   const { name, email, address, specialization } = req.body;
 
   try {
-    // check if already requested
     const existing = await DoctorRequest.findOne({ email });
     if (existing) {
       return res.status(400).json({ message: 'A request with this email already exists' });
     }
 
-    // generate email verification token
     const token = crypto.randomBytes(32).toString('hex');
     const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
@@ -132,7 +125,6 @@ export const doctorRegisterRequest = async (req, res) => {
       emailVerifyExpires: expires,
     });
 
-    // send verification email
     const verifyUrl = `http://localhost:5000/api/auth/verify-email/${token}`;
     await sendEmail({
       to: email,
@@ -155,12 +147,12 @@ export const doctorRegisterRequest = async (req, res) => {
   }
 };
 
-// GET /api/auth/verify-email/:token
+// VERIFY DOCTOR EMAIL
 export const verifyDoctorEmail = async (req, res) => {
   try {
     const request = await DoctorRequest.findOne({
       emailVerifyToken: req.params.token,
-      emailVerifyExpires: { $gt: Date.now() },  // not expired
+      emailVerifyExpires: { $gt: Date.now() },
     });
 
     if (!request) {
@@ -178,6 +170,7 @@ export const verifyDoctorEmail = async (req, res) => {
   }
 };
 
+// SETUP DOCTOR ACCOUNT
 export const setupDoctorAccount = async (req, res) => {
   const { password, confirmPassword } = req.body;
 
@@ -189,7 +182,6 @@ export const setupDoctorAccount = async (req, res) => {
       return res.status(400).json({ message: 'Passwords do not match' });
     }
 
-    // find valid non-expired token
     const request = await DoctorRequest.findOne({
       setupToken: req.params.token,
       setupTokenExpires: { $gt: Date.now() },
@@ -202,54 +194,44 @@ export const setupDoctorAccount = async (req, res) => {
       });
     }
 
-    // create User account with doctor's own password
+    const { name, email, specialization } = request;
+
     const user = await User.create({
-      name: request.name,
-      email: request.email,
-      specialization: request.specialization,
+      name,
+      email,
+      specialization,
       password,
       role: 'doctor',
     });
 
-    // create Doctor profile
     await Doctor.create({
-      UserId: user._id,
-      specialization: request.specialization,
+      userId: user._id, 
+      specialization,
       fees: 2500,
       experience: "10+year",
       availableSlots: [
-        {
-          "day": "Mon",
-          "startTime": "04:00 PM",
-          "endTime": "06:00 PM"
-        },
-        {
-          "day": "Tue",
-          "startTime": "04:00 PM",
-          "endTime": "06:00 PM"
-        },
+        { "day": "Mon", "startTime": "04:00 PM", "endTime": "06:00 PM" },
+        { "day": "Tue", "startTime": "04:00 PM", "endTime": "06:00 PM" },
       ]
     });
 
-    // mark request as account_created and clear token
     request.approvalStatus = 'account_created';
     request.setupToken = undefined;
     request.setupTokenExpires = undefined;
+    await request.save();
 
     await sendEmail({
       to: email,
       subject: 'Welcome to the Hospital System! Account Created', 
       html: `
-    <h2>Hello Dr. ${name},</h2>
-    <p>Your professional account has been successfully set up and is ready to use.</p>
-    <p>You can now log in to your dashboard using your email and the password you just created.</p>
-    <a href="http://localhost:5173/login" style="padding:10px 20px;background:#10B981;color:white;border-radius:6px;text-decoration:none;display:inline-block;">
-      Login to Dashboard
-    </a>
-  `,
+        <h2>Hello Dr. ${name},</h2>
+        <p>Your professional account has been successfully set up and is ready to use.</p>
+        <p>You can now log in to your dashboard using your email and the password you just created.</p>
+        <a href="http://localhost:5173/login" style="padding:10px 20px;background:#10B981;color:white;border-radius:6px;text-decoration:none;display:inline-block;">
+          Login to Dashboard
+        </a>
+      `,
     });
-
-    await request.save();
 
     res.json({
       message: 'Account created successfully. You can now login.',

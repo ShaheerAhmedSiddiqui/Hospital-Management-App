@@ -3,22 +3,26 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { setupDoctorAccount } from '../services/api';
 
 export default function DoctorSetup() {
-  const { token }   = useParams();
+  const { token }   = useParams<{ token: string }>();
   const navigate    = useNavigate();
   const [form, setForm]       = useState({ password: '', confirmPassword: '' });
   const [error, setError]     = useState('');
   const [loading, setLoading] = useState(false);
   const [done, setDone]       = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (form.password !== form.confirmPassword) return setError('Passwords do not match');
-    setLoading(true); setError('');
+    
+    if (!token) return setError('Activation token is missing or invalid.');
+
+    setLoading(true); 
+    setError('');
     try {
       await setupDoctorAccount(token, form);
       setDone(true);
       setTimeout(() => navigate('/login'), 3000);
-    } catch (err) {
+    } catch (err: any) { 
       setError(err.response?.data?.message || 'Setup failed. Link may have expired.');
     } finally {
       setLoading(false);

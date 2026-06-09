@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const slotSchema = new mongoose.Schema({
     day:{
         type: String,
-        enum: ['Mon', 'Tue', 'Wed', 'Thur', 'Fri', 'Sat', 'Sun']
+        enum: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] 
     },
     startTime: {
         type: String
@@ -14,7 +14,7 @@ const slotSchema = new mongoose.Schema({
 });
 
 const doctorSchema = new mongoose.Schema({
-    UserId: {
+    userId: { 
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true,
@@ -22,7 +22,7 @@ const doctorSchema = new mongoose.Schema({
     },
     departmentId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'departments'
+        ref: 'Department' // 🟥 Fixed from 'departments' to 'Department'
     },
     specialization: { 
         type: String, 

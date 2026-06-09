@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
     role: {
         type: String,
         enum: ['patient', 'doctor', 'admin'],
-       required: true
+        required: true
     },
     specialization: {
         type: String,
@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema({
     },
     profileImage: {
         type: String,
-        defualt: ''
+        default: '' 
     }
 },{
     timestamps: true

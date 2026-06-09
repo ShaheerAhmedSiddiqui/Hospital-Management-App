@@ -13,15 +13,19 @@ export default function DoctorRegister() {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoading(true); setError('');
+    setLoading(true); 
+    setError('');
+    
     try {
       await doctorRegisterReq(form);
       setSuccess(true);
-    } catch (err) {
+    } catch (err: any) { // ✅ Fixed: Typed catch block to 'any' to cleanly read axios properties
       setError(err.response?.data?.message || 'Submission failed');
     } finally {
       setLoading(false);
