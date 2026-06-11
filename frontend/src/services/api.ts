@@ -26,9 +26,9 @@ export const rejectDoctor       = (id: string, reason: string) => api.post(`/adm
 export const toggleUserStatus   = (id: string) => api.put(`/admin/users/${id}/toggle`);
 
 // doctors
-export const getAllDoctors       = () => api.get('/doctors');
+export const getAllDoctors      = () => api.get('/doctors');
 export const getDoctorById      = (id: string) => api.get(`/doctors/${id}`);
-export const updateDoctor       = (id: string, data: object) => api.put(`/doctors/${id}`, data);
+export const updateDoctorProfile = (id: string, data: object) => api.put(`/doctors/${id}/profile`, data);
 
 // appointments
 export const bookAppointment    = (data: object) => api.post('/appointments', data);

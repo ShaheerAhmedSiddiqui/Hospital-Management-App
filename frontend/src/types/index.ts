@@ -50,3 +50,12 @@ export interface DashboardStats {
   totalPatients:     number;
   totalAppointments: number;
 }
+
+export interface Doctor {
+  _id:            string;
+  specialization: string;
+  fee:            number;
+  experience?:    number;
+  userId:         { name: string };
+  availability?:  { day: string; startTime: string; endTime: string }[];
+}

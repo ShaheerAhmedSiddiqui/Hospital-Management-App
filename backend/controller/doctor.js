@@ -35,21 +35,21 @@ export const createDoctor = async (req, res) => {
   }
 };
 
-export const updateDoctor = async (req, res) => {
+export const updateDoctorProfile = async (req, res) => {
   try {
+    const { fee, qualification, experience, bio, availability, department } = req.body;
+
     const doctor = await Doctor.findByIdAndUpdate(
       req.params.id,
-      req.body,
-      { new: true }
-    );
+      { fee, qualification, experience, bio, availability, department },
+      { new: true, runValidators: true }
+    ).populate('userId', 'name email');
 
-    if (!doctor) {
-      return res.status(404).json({ message: "Doctor not found" });
-    }
+    if (!doctor) return res.status(404).json({ message: 'Doctor not found' });
 
-    res.json(doctor);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.json({ message: 'Doctor profile updated successfully', doctor });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 

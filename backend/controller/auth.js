@@ -196,6 +196,26 @@ export const setupDoctorAccount = async (req, res) => {
 
     const { name, email, specialization } = request;
 
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      const doctorExists = await Doctor.findOne({ userId: userExists._id });
+      
+      if (doctorExists) {
+        // A twin request already successfully processed this! Clean up and return success.
+        request.approvalStatus = 'account_created';
+        request.setupToken = undefined;
+        request.setupTokenExpires = undefined;
+        await request.save();
+
+        return res.json({
+          message: 'Account created successfully. You can now login.',
+        });
+      }
+      
+      return res.status(400).json({ message: "An account with this email already exists." });
+    }
+
+    // Otherwise, proceed normally if it's the genuine first request
     const user = await User.create({
       name,
       email,
@@ -220,7 +240,8 @@ export const setupDoctorAccount = async (req, res) => {
     request.setupTokenExpires = undefined;
     await request.save();
 
-    await sendEmail({
+    try {
+      await sendEmail({
       to: email,
       subject: 'Welcome to the Hospital System! Account Created', 
       html: `
@@ -232,8 +253,11 @@ export const setupDoctorAccount = async (req, res) => {
         </a>
       `,
     });
+    } catch (error) {
+      console.error("Background Email delivery failed:", emailError.message);
+    }
 
-    res.json({
+    return res.status(200).json({
       message: 'Account created successfully. You can now login.',
     });
 

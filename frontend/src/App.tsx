@@ -3,10 +3,10 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // public
-import Login           from './pages/login';
-import Register        from './pages/register';
+import Login           from './pages/Login';
+import Register        from './pages/Register';
 import DoctorRegister  from './pages/DoctorRegister';
-import DoctorSetup     from './pages/doctorSetup';
+import DoctorSetup     from './pages/DoctorSetup';
 import Unauthorized    from './pages/Unauthorized';
 
 // patient
@@ -17,17 +17,17 @@ import PatientProfile    from './pages/patient/Profile';
 
 // doctor
 import DoctorDashboard    from './pages/doctor/Dashboard';
-import DoctorAppointments from './pages/doctor/appointments';
+import DoctorAppointments from './pages/doctor/Appointments';
 import DoctorProfile      from './pages/doctor/Profile';
 import DoctorPatients     from './pages/doctor/Patient';
 
 // admin
 import AdminDashboard    from './pages/admin/Dashboard';
-import DoctorRequests    from './pages/admin/doctorRequest';
+import DoctorRequests    from './pages/admin/DoctorRequest';
 import ManageDoctors     from './pages/admin/ManageDoctors';
 import ManagePatients    from './pages/admin/ManagePatients';
 import AllAppointments   from './pages/admin/Allappointments';
-import ManageUsers       from './pages/admin/Manageusers';
+import ManageUsers       from './pages/admin/ManageUsers';
 import Departments       from './pages/admin/Departments';
 
 export default function App() {

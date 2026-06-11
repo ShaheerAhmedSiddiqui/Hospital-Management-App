@@ -22,7 +22,7 @@ const doctorSchema = new mongoose.Schema({
     },
     departmentId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Department' // 🟥 Fixed from 'departments' to 'Department'
+        ref: 'Department' 
     },
     specialization: { 
         type: String, 

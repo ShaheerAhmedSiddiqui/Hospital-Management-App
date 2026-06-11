@@ -10,8 +10,10 @@ export default function DoctorSetup() {
   const [loading, setLoading] = useState(false);
   const [done, setDone]       = useState(false);
 
+  
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (loading) return;
     if (form.password !== form.confirmPassword) return setError('Passwords do not match');
     
     if (!token) return setError('Activation token is missing or invalid.');

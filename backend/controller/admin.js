@@ -125,14 +125,15 @@ export const rejectDoctorRequest = async (req, res) => {
       return res.status(404).json({ message: 'Request not found' });
     }
 
-    request.approvalStatus = 'rejected';
+    request.approvalStatus = 'registeration_rejected';
     await request.save();
 
+    const {name, email} = request;
     await sendEmail({
-      to:      request.email,
+      to:      email,
       subject: 'Update on your hospital registration request',
       html: `
-        <h2>Hello Dr. ${request.name},</h2>
+        <h2>Hello Dr. ${name},</h2>
         <p>We regret to inform you that your registration request has not been approved.</p>
         <p><strong>Reason:</strong> ${req.body.reason || 'No reason provided.'}</p>
         <p>For further information, please contact the hospital administration.</p>

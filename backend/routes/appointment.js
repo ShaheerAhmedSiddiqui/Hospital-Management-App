@@ -16,7 +16,7 @@ router.get("/", protect, getAppointments); // filtered by role inside controller
 router.put(
   "/:id/status",
   protect,
-  authorize("doctor", "admin", "receptionist"),
+  authorize("doctor", "admin"),
   updateStatus
 );
 

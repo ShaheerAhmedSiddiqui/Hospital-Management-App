@@ -9,5 +9,8 @@ node_modules/
 .env.development
 .env.production
 
+
+#public
+/public
 # Logs
 *.log
