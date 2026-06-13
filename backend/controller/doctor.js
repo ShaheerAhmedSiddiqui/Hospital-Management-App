@@ -37,13 +37,13 @@ export const createDoctor = async (req, res) => {
 
 export const updateDoctorProfile = async (req, res) => {
   try {
-    const { fee, qualification, experience, bio, availability, department } = req.body;
+    const { fees, qualification, experience, bio, availableSlots, departmentId} = req.body;
 
     const doctor = await Doctor.findByIdAndUpdate(
       req.params.id,
-      { fee, qualification, experience, bio, availability, department },
+      { fees, qualification, experience, bio, availableSlots, departmentId },
       { new: true, runValidators: true }
-    ).populate('userId', 'name email');
+    ).populate('userId', 'name email isActive');
 
     if (!doctor) return res.status(404).json({ message: 'Doctor not found' });
 

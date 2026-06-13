@@ -173,7 +173,23 @@ export const verifyDoctorEmail = async (req, res) => {
 // SETUP DOCTOR ACCOUNT
 export const setupDoctorAccount = async (req, res) => {
   const { password, confirmPassword } = req.body;
+  // 👇 PLACE THIS AT THE TOP OF TRY BLOCK TO SEE INDEPENDENT TRUTH 👇
+console.log("--- DEBUGGING SETUP ACCOUNT ---");
+console.log("Token Received from Frontend URL:", req.params.token);
 
+// Try to find the request ONLY by the token to see what state it is in
+const rawDoc = await DoctorRequest.findOne({ setupToken: req.params.token });
+if (!rawDoc) {
+  console.log("❌ CRITICAL: No document exists in DB with this setupToken!");
+} else {
+  console.log("✅ Document Found!");
+  console.log("Current DB Approval Status:", rawDoc.approvalStatus);
+  console.log("Does status match 'registeration_approved'?", rawDoc.approvalStatus === 'registeration_approved');
+  console.log("DB Expiration Time:", rawDoc.setupTokenExpires);
+  console.log("Current Server Time:", new Date());
+  console.log("Is the token expired?", rawDoc.setupTokenExpires < new Date());
+}
+console.log("--------------------------------");
   try {
     if (!password || !confirmPassword) {
       return res.status(400).json({ message: 'Both password fields are required' });
@@ -184,7 +200,7 @@ export const setupDoctorAccount = async (req, res) => {
 
     const request = await DoctorRequest.findOne({
       setupToken: req.params.token,
-      setupTokenExpires: { $gt: Date.now() },
+      setupTokenExpires: { $gt: new Date() },
       approvalStatus: 'registeration_approved',
     });
 
@@ -227,12 +243,9 @@ export const setupDoctorAccount = async (req, res) => {
     await Doctor.create({
       userId: user._id, 
       specialization,
-      fees: 2500,
-      experience: "10+year",
-      availableSlots: [
-        { "day": "Mon", "startTime": "04:00 PM", "endTime": "06:00 PM" },
-        { "day": "Tue", "startTime": "04:00 PM", "endTime": "06:00 PM" },
-      ]
+      fees: null,
+      experience: "",
+      availableSlots: []
     });
 
     request.approvalStatus = 'account_created';

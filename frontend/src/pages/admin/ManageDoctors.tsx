@@ -11,11 +11,11 @@ interface AvailabilitySlot {
 interface Doctor {
   _id:            string;
   specialization: string;
-  experience:     number;
-  fee:            number;
-  qualification:  string;
-  bio:            string;
-  availability:   AvailabilitySlot[];
+  experience:     string;
+  fees:           number;
+  qualification?: string;
+  bio?:           string;
+  availableSlots: AvailabilitySlot[];
   userId: {
     _id:      string;
     name:     string;
@@ -25,21 +25,21 @@ interface Doctor {
 }
 
 interface ProfileForm {
-  fee:          string;
+  fees:          string;
   qualification: string;
-  experience:   string;
-  bio:          string;
-  availability: AvailabilitySlot[];
+  experience:    string;
+  bio:           string;
+  availableSlots: AvailabilitySlot[];
 }
 
 const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
 const emptyForm = (): ProfileForm => ({
-  fee:          '',
+  fees:          '',
   qualification: '',
-  experience:   '',
-  bio:          '',
-  availability: [],
+  experience:    '',
+  bio:           '',
+  availableSlots: [],
 });
 
 export default function ManageDoctors() {
@@ -57,16 +57,15 @@ export default function ManageDoctors() {
       .then(res => {
         const data: Doctor[] = res.data;
         setDoctors(data);
-        // pre-fill forms with existing data
         const initial: Record<string, ProfileForm> = {};
         data.forEach(d => {
           initial[d._id] = {
-            fee:          d.fee?.toString()          ?? '',
+            fees:          d.fees?.toString()        ?? '',
             qualification: d.qualification           ?? '',
-            experience:   d.experience?.toString()   ?? '',
-            bio:          d.bio                      ?? '',
-            availability: d.availability?.length
-              ? d.availability
+            experience:    d.experience               ?? '',
+            bio:           d.bio                      ?? '',
+            availableSlots: d.availableSlots?.length
+              ? d.availableSlots
               : [],
           };
         });
@@ -82,7 +81,6 @@ export default function ManageDoctors() {
     setTimeout(() => setToast(''), 3000);
   };
 
-  // ── toggle active/inactive ──
   const handleToggle = async (userId: string) => {
     try {
       await toggleUserStatus(userId);
@@ -91,7 +89,6 @@ export default function ManageDoctors() {
     } catch { showToast('Failed to update status.'); }
   };
 
-  // ── form field change ──
   const handleFormChange = (
     doctorId: string,
     field: keyof ProfileForm,
@@ -103,14 +100,13 @@ export default function ManageDoctors() {
     }));
   };
 
-  // ── availability slot helpers ──
   const addSlot = (doctorId: string) => {
     setForms(prev => ({
       ...prev,
       [doctorId]: {
         ...prev[doctorId],
-        availability: [
-          ...prev[doctorId].availability,
+        availableSlots: [
+          ...prev[doctorId].availableSlots,
           { day: 'Mon', startTime: '09:00', endTime: '17:00' },
         ],
       },
@@ -122,7 +118,7 @@ export default function ManageDoctors() {
       ...prev,
       [doctorId]: {
         ...prev[doctorId],
-        availability: prev[doctorId].availability.filter((_, i) => i !== index),
+        availableSlots: prev[doctorId].availableSlots.filter((_, i) => i !== index),
       },
     }));
   };
@@ -134,23 +130,22 @@ export default function ManageDoctors() {
     value: string
   ) => {
     setForms(prev => {
-      const slots = [...prev[doctorId].availability];
+      const slots = [...prev[doctorId].availableSlots];
       slots[index] = { ...slots[index], [field]: value };
-      return { ...prev, [doctorId]: { ...prev[doctorId], availability: slots } };
+      return { ...prev, [doctorId]: { ...prev[doctorId], availableSlots: slots } };
     });
   };
 
-  // ── save profile ──
   const handleSave = async (doctorId: string) => {
     const f = forms[doctorId];
     setSaving(doctorId);
     try {
       await updateDoctorProfile(doctorId, {
-        fee:          Number(f.fee),
+        fees:          Number(f.fees),
         qualification: f.qualification,
-        experience:   Number(f.experience),
-        bio:          f.bio,
-        availability: f.availability,
+        experience:    f.experience,
+        bio:           f.bio,
+        availableSlots: f.availableSlots,
       });
       showToast('Doctor profile saved successfully!');
       setExpandedId(null);
@@ -177,7 +172,6 @@ export default function ManageDoctors() {
 
       <div className="max-w-7xl mx-auto px-4 py-8">
 
-        {/* header */}
         <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Manage doctors</h1>
@@ -191,7 +185,6 @@ export default function ManageDoctors() {
           />
         </div>
 
-        {/* skeleton */}
         {loading ? (
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
@@ -215,20 +208,18 @@ export default function ManageDoctors() {
         ) : (
           <div className="space-y-4">
             {filtered.map(d => {
-              const form      = forms[d._id] ?? emptyForm();
-              const isOpen    = expandedId === d._id;
-              const isSaving  = saving === d._id;
-              const isComplete = d.fee > 0 && d.availability?.length > 0;
+              const form       = forms[d._id] ?? emptyForm();
+              const isOpen     = expandedId === d._id;
+              const isSaving   = saving === d._id;
+              const isComplete = d.fees > 0 && d.availableSlots?.length > 0 && d.experience !="" && d.qualification?.trim() !="" && d.bio?.trim() !="";
 
               return (
                 <div key={d._id}
                   className="bg-white rounded-2xl border border-gray-100 overflow-hidden
                              transition-all duration-200">
 
-                  {/* ── doctor card header ── */}
                   <div className="p-5 flex items-center gap-4 flex-wrap">
 
-                    {/* avatar */}
                     <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center
                                     justify-center flex-shrink-0">
                       <span className="text-teal-700 font-bold text-lg">
@@ -236,7 +227,6 @@ export default function ManageDoctors() {
                       </span>
                     </div>
 
-                    {/* info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-semibold text-gray-900">{d.userId?.name}</p>
@@ -244,7 +234,6 @@ export default function ManageDoctors() {
                                          px-2 py-0.5 rounded-full">
                           {d.specialization}
                         </span>
-                        {/* profile complete badge */}
                         {isComplete ? (
                           <span className="bg-green-50 text-green-700 text-xs font-medium
                                            px-2 py-0.5 rounded-full flex items-center gap-1">
@@ -262,17 +251,15 @@ export default function ManageDoctors() {
                       </div>
                       <p className="text-xs text-gray-500 mt-0.5">{d.userId?.email}</p>
                       <div className="flex items-center gap-4 mt-1 text-xs text-gray-400">
-                        {d.fee > 0 && <span>PKR {d.fee}</span>}
-                        {d.experience > 0 && <span>{d.experience} yrs exp</span>}
-                        {d.availability?.length > 0 && (
-                          <span>{d.availability.length} day(s) available</span>
+                        {d.fees > 0 && <span>PKR {d.fees}</span>}
+                        {d.experience && <span>{d.experience} exp</span>}
+                        {d.availableSlots?.length > 0 && (
+                          <span>{d.availableSlots.length} slot(s)</span>
                         )}
                       </div>
                     </div>
 
-                    {/* actions */}
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      {/* active/inactive toggle */}
                       <button onClick={() => handleToggle(d.userId?._id)}
                         className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
                           d.userId?.isActive
@@ -282,7 +269,6 @@ export default function ManageDoctors() {
                         {d.userId?.isActive ? 'Deactivate' : 'Activate'}
                       </button>
 
-                      {/* setup profile toggle */}
                       <button
                         onClick={() => setExpandedId(isOpen ? null : d._id)}
                         className={`text-xs font-medium px-4 py-1.5 rounded-lg transition-colors
@@ -301,7 +287,6 @@ export default function ManageDoctors() {
                     </div>
                   </div>
 
-                  {/* ── expandable profile form ── */}
                   {isOpen && (
                     <div className="border-t border-gray-100 p-6 bg-gray-50/50">
                       <p className="text-sm font-semibold text-gray-700 mb-5">
@@ -310,27 +295,25 @@ export default function ManageDoctors() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
-                        {/* fee */}
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1.5">
                             Consultation fee (PKR)
                           </label>
                           <input
-                            type="number" min="0" placeholder="e.g. 1500"
-                            value={form.fee}
-                            onChange={e => handleFormChange(d._id, 'fee', e.target.value)}
+                            type="number" min="0" placeholder="e.g. 2500"
+                            value={form.fees}
+                            onChange={e => handleFormChange(d._id, 'fees', e.target.value)}
                             className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm
                                        bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                           />
                         </div>
 
-                        {/* experience */}
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                            Years of experience
+                            Experience
                           </label>
                           <input
-                            type="number" min="0" placeholder="e.g. 10"
+                            type="text" placeholder="e.g. 10+ years"
                             value={form.experience}
                             onChange={e => handleFormChange(d._id, 'experience', e.target.value)}
                             className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm
@@ -338,7 +321,6 @@ export default function ManageDoctors() {
                           />
                         </div>
 
-                        {/* qualification */}
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1.5">
                             Qualification
@@ -352,7 +334,6 @@ export default function ManageDoctors() {
                           />
                         </div>
 
-                        {/* bio */}
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1.5">
                             Bio
@@ -368,11 +349,10 @@ export default function ManageDoctors() {
                         </div>
                       </div>
 
-                      {/* ── availability slots ── */}
                       <div className="mt-6">
                         <div className="flex items-center justify-between mb-3">
                           <div>
-                            <p className="text-sm font-medium text-gray-700">Availability slots</p>
+                            <p className="text-sm font-medium text-gray-700">Available slots</p>
                             <p className="text-xs text-gray-400 mt-0.5">
                               Patients can only book on these days and times
                             </p>
@@ -388,19 +368,18 @@ export default function ManageDoctors() {
                           </button>
                         </div>
 
-                        {form.availability.length === 0 ? (
+                        {form.availableSlots.length === 0 ? (
                           <div className="border-2 border-dashed border-gray-200 rounded-xl p-6
                                           text-center text-sm text-gray-400">
                             No slots added yet. Click "Add slot" to set availability.
                           </div>
                         ) : (
                           <div className="space-y-2">
-                            {form.availability.map((slot, idx) => (
+                            {form.availableSlots.map((slot, idx) => (
                               <div key={idx}
                                 className="flex items-center gap-3 bg-white border border-gray-200
                                            rounded-xl px-4 py-3 flex-wrap">
 
-                                {/* day */}
                                 <div className="flex items-center gap-2">
                                   <label className="text-xs text-gray-500 w-8">Day</label>
                                   <select
@@ -414,7 +393,6 @@ export default function ManageDoctors() {
                                   </select>
                                 </div>
 
-                                {/* start time */}
                                 <div className="flex items-center gap-2">
                                   <label className="text-xs text-gray-500">From</label>
                                   <input
@@ -425,7 +403,6 @@ export default function ManageDoctors() {
                                   />
                                 </div>
 
-                                {/* end time */}
                                 <div className="flex items-center gap-2">
                                   <label className="text-xs text-gray-500">To</label>
                                   <input
@@ -436,7 +413,6 @@ export default function ManageDoctors() {
                                   />
                                 </div>
 
-                                {/* remove */}
                                 <button type="button" onClick={() => removeSlot(d._id, idx)}
                                   className="ml-auto text-red-400 hover:text-red-600 hover:bg-red-50
                                              p-1.5 rounded-lg transition-colors">
@@ -452,7 +428,6 @@ export default function ManageDoctors() {
                         )}
                       </div>
 
-                      {/* ── save button ── */}
                       <div className="flex items-center justify-end gap-3 mt-6 pt-5
                                       border-t border-gray-200">
                         <button type="button" onClick={() => setExpandedId(null)}
@@ -487,6 +462,7 @@ export default function ManageDoctors() {
             })}
           </div>
         )}
+
       </div>
     </div>
   );

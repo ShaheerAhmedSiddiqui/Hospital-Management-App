@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
 
 const slotSchema = new mongoose.Schema({
-    day:{
+    day: {
         type: String,
-        enum: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] 
+        enum: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
     },
     startTime: {
         type: String
@@ -14,7 +14,7 @@ const slotSchema = new mongoose.Schema({
 });
 
 const doctorSchema = new mongoose.Schema({
-    userId: { 
+    userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true,
@@ -22,10 +22,10 @@ const doctorSchema = new mongoose.Schema({
     },
     departmentId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Department' 
+        ref: 'Department'
     },
-    specialization: { 
-        type: String, 
+    specialization: {
+        type: String,
         required: true
     },
     experience: {
@@ -35,8 +35,14 @@ const doctorSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    availableSlots: [slotSchema]
-},{
+    availableSlots: [slotSchema],
+    qualification: {
+        type: String
+    },
+    bio: {
+        type: String
+    }
+}, {
     timestamps: true
 });
 
