@@ -54,8 +54,8 @@ export interface DashboardStats {
 export interface Doctor {
   _id:            string;
   specialization: string;
-  fee:            number;
+  fees:            number;
   experience?:    number;
   userId:         { name: string };
-  availability?:  { day: string; startTime: string; endTime: string }[];
+  availableSlots?:  { day: string; startTime: string; endTime: string }[];
 }

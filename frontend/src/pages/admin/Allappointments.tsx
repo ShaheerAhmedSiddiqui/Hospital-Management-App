@@ -109,7 +109,7 @@ export default function AllAppointments() {
                       <p className="text-xs text-gray-400">{a.doctorId?.specialization}</p>
                     </td>
                     <td className="py-4 px-6 text-gray-600">
-                      {new Date(a.date).toLocaleDateString()} · {a.time}
+                      {new Date(a.date).toLocaleDateString()} · {a.appointmentDate}
                     </td>
                     <td className="py-4 px-6">
                       <span className={`text-xs font-medium px-2.5 py-1 rounded-full capitalize ${STATUS_STYLE[a.status]}`}>

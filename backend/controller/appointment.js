@@ -9,20 +9,38 @@ export const bookAppointment = async (req, res) => {
   const { doctorId, date, time, reason } = req.body;
 
   try {
-    // 1 — validate doctor exists
+    // 1 — Validate doctor exists
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) {
       return res.status(404).json({ message: 'Doctor not found' });
     }
 
-    // 2 — find or create Patient doc for this user
-    let patient = await Patient.findOne({ userId: req.user._id });
+    // 2 — convert target date into exact 3-letter day format ("Mon", "Tue")
+    const [year, month, day] = date.split('-').map(Number);
+    const targetDate = new Date(year, month - 1, day);
+    const dayOfWeek = targetDate.toLocaleDateString('en-US', { weekday: 'short' }); 
 
+    // 3 — Check if the requested time falls within the doctor's time ranges
+    const isWithinAvailability = doctor.availableSlots?.some(slot => {
+      if (slot.day !== dayOfWeek) return false;
+      
+      // Assumes 24-hour time strings (e.g., "09:00" <= "10:30" <= "13:00")
+      return time >= slot.startTime && time <= slot.endTime;
+    });
+
+    if (!isWithinAvailability) {
+      return res.status(400).json({ 
+        message: `Doctor is not available at ${time} on ${dayOfWeek}.` 
+      });
+    }
+
+    // 4 — Find or create Patient document for the authenticated user
+    let patient = await Patient.findOne({ userId: req.user._id });
     if (!patient) {
       patient = await Patient.create({ userId: req.user._id });
     }
 
-    // 3 — check for duplicate booking (matching schema paths)
+    // 5 — Prevent duplicate bookings for the same slot
     const duplicate = await Appointment.findOne({
       doctorId: doctorId,
       patientId: patient._id,
@@ -33,57 +51,30 @@ export const bookAppointment = async (req, res) => {
 
     if (duplicate) {
       return res.status(400).json({
-        message: 'You already have an appointment with this doctor at this time',
+        message: 'You already have a pending or confirmed appointment at this exact time.',
       });
     }
 
-    // 4 — create appointment using exact Schema keys
+    // 6 — Create appointment using exact schema keys (notes, fees)
     const appointment = await Appointment.create({
       doctorId: doctorId,
       patientId: patient._id,
       appointmentDate: new Date(date),
       timeSlot: time,
-      notes: reason,       // Maps frontend 'reason' to backend 'notes'
-      fees: doctor.fees,  // Your Doctor model uses 'fees' with an s
+      notes: reason,      
+      fees: doctor.fees, 
     });
 
-    // 5 — return populated appointment using correct schema paths
+    // 7 — Populate data for client consumption
     const populated = await Appointment.findById(appointment._id)
       .populate({ path: 'doctorId', populate: { path: 'userId', select: 'name email' } })
       .populate({ path: 'patientId', populate: { path: 'userId', select: 'name email' } });
 
-  //   const doctorWithUser = await Doctor.findById(doctorId).populate({
-  //     path: 'userId',
-  //     select: 'name email'
-  //   });
-
-  //  if(appointment){
-  //    if (!doctorWithUser?.userId?.email) {
-  //     throw new Error('Doctor email not found');
-  //   }
-
-  //   await sendEmail({
-  //     to: doctorWithUser.userId.email,
-  //     subject: 'New Appointment Request Pending Approval',
-  //     html: `
-  //       <h2>Hello Dr. ${doctorWithUser.userId.name},</h2>
-
-  //       <p>You have received a new appointment request that is currently <strong>pending</strong>.</p>
-
-  //       <h3>Appointment Details</h3>
-  //       <ul>
-  //         <li><strong>Date:</strong> ${date}</li>
-  //         <li><strong>Time:</strong> ${time}</li>
-  //         <li><strong>Reason:</strong> ${reason || 'Not provided'}</li>
-  //       </ul>
-
-  //       <p>Please login to your dashboard to accept or reject this appointment.</p>
-
-  //       <br/>
-  //       <p>Regards,<br/>Hospital Management System</p>
-  //    `
-  //   });
-  //  }
+    // Success response to prevent frontend from hanging
+    return res.status(201).json({
+      message: 'Appointment booked successfully!',
+      data: populated
+    });
 
   } catch (err) {
     res.status(500).json({ message: err.message });
