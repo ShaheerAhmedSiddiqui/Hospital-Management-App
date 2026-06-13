@@ -2,7 +2,7 @@ import express from "express";
 import { protect, authorize } from "../middleware/auth.js";
 import {
   getAllDoctors,
-  getDoctorById,
+  getDoctorProfile,
   updateDoctorProfile,
   createDoctor,
 } from "../controller/doctor.js";
@@ -10,7 +10,7 @@ import {
 const router = express.Router();
 
 router.get("/", getAllDoctors); // public
-router.get("/:id", getDoctorById); // public
+router.get("/me", protect, authorize("doctor"), getDoctorProfile ); // public
 router.post("/", protect, authorize("admin"), createDoctor)
 router.put("/:id/profile", protect, authorize("doctor", "admin"), updateDoctorProfile);
 
