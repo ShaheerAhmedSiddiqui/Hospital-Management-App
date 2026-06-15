@@ -4,6 +4,7 @@ import crypto from "crypto";
 import DoctorRequest from "../models/DoctorRequest.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import Doctor from "../models/doctor.js";
+import Patient from "../models/patient.js";
 
 //  TOKEN 
 const generateToken = (id) => {
@@ -13,40 +14,99 @@ const generateToken = (id) => {
 };
 
 //  REGISTER 
-export const register = async (req, res, next) => {
-  const { name, email, password, role, specialization } = req.body;
+export const startRegistration = async (req, res) => {
   try {
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: "All fields are required" });
+    const { name, email } = req.body;
+
+    // 1 — Check if the user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "An account with this email already exists." });
     }
 
-    if (role === 'admin') {
-      return res.status(403).json({ message: 'Cannot self-register as admin' });
-    }
+    // 2 — Generate unique verification token and 1-hour expiration timestamp
+    const token = crypto.randomBytes(32).toString('hex');
+    const tokenExpiry = Date.now() + 3600000; 
 
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-      return res.status(400).json({ message: "User already exists" });
-    }
-
-    const user = await User.create({
+    // 3 — Save the pending, unverified user to the database
+    await User.create({
       name,
       email,
-      password,
-      role,
-      specialization,
+      role: 'patient',
+      isVerified: false,
+      verificationToken: token,
+      verificationTokenExpires: tokenExpiry
     });
 
-    res.status(201).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      specialization: user.specialization,
-      token: generateToken(user._id),
+    const verificationUrl = `http://localhost:5173/set-password?token=${token}`;
+
+    // 5 — Dispatch the verification payload inline
+    await sendEmail({
+      to: email,
+      subject: "Complete your Patient Registration",
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 12px;">
+          <h2 style="color: #2563eb; margin-bottom: 10px;">Welcome to our Clinic, ${name}!</h2>
+          <p style="color: #374151; line-height: 1.5;">Thank you for initiating your registration. Please click the button below to verify your email address and setup your private account password.</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${verificationUrl}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);">Verify Email & Set Password</a>
+          </div>
+          <p style="color: #6b7280; font-size: 12px; border-top: 1px solid #f3f4f6; padding-top: 15px; margin-top: 20px;">
+            This security link will automatically expire in 1 hour. If you didn't request this action, you can safely ignore this email.
+          </p>
+        </div>
+      `,
     });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+
+    // 6 — Return success response to frontend once email task finishes running
+    res.status(200).json({ 
+      message: "Verification link dispatched! Please check your email inbox to finalize registration." 
+    });
+    
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const completeRegistration = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    if (!password || password.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters long." });
+    }
+
+    // 1 — Find the user with a matching token that hasn't expired yet
+    const user = await User.findOne({
+      verificationToken: token,
+      verificationTokenExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Security token is invalid or has expired." });
+    }
+
+    // 2 — Assign plain text password. 
+    user.password = password; 
+    
+    // 3 — Activate user credentials and wipe the token out of storage fields
+    user.isVerified = true;
+    user.verificationToken = null;
+    user.verificationTokenExpires = null;
+    
+    await user.save();
+
+    // 4 — Patient profile model record simultaneously
+    await Patient.create({
+      userId: user._id,
+      phoneNumber: '',
+      address: '',
+      gender: 'Other' 
+    });
+
+    res.status(201).json({ message: "Account setup complete! You can now log in securely." });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
 

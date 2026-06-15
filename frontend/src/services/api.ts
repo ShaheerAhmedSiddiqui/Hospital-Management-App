@@ -12,7 +12,8 @@ api.interceptors.request.use((config) => {
 
 // auth
 export const loginUser          = (data: { email: string; password: string }) => api.post('/auth/login', data);
-export const registerUser       = (data: { name: string; email: string; password: string; role: string }) => api.post('/auth/register', data);
+export const startRegistration = (data: { name: string; email: string }) =>   api.post('/auth/register-start', data);
+export const completeRegistration = (data: { token: string; password: string }) =>   api.post('/auth/register-complete', data);
 export const getMe              = () => api.get('/auth/me');
 export const doctorRegisterReq  = (data: { name: string; email: string; address: string; specialization: string }) => api.post('/auth/doctor-register-request', data);
 export const setupDoctorAccount = (token: string, data: { password: string; confirmPassword: string }) => api.post(`/auth/doctor-setup/${token}`, data);

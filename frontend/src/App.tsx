@@ -29,6 +29,7 @@ import ManagePatients    from './pages/admin/ManagePatients';
 import AllAppointments   from './pages/admin/Allappointments';
 import ManageUsers       from './pages/admin/ManageUsers';
 import Departments       from './pages/admin/Departments';
+import SetPassword from './pages/setPassword';
 
 export default function App() {
   return (
@@ -43,6 +44,8 @@ export default function App() {
           <Route path="/doctor-register"     element={<DoctorRegister />} />
           <Route path="/doctor-setup/:token" element={<DoctorSetup />} />
           <Route path="/unauthorized"        element={<Unauthorized />} />
+          <Route path="/set-password" element={<SetPassword />} />
+
 
           {/* ── patient ── */}
           <Route path="/patient/dashboard"

@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema({
-    name :{
+    name: {
         type: String,
         required: true
     },
@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: true
+        required: false 
     },
     role: {
         type: String,
@@ -29,13 +29,25 @@ const userSchema = new mongoose.Schema({
     profileImage: {
         type: String,
         default: '' 
+    },
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    verificationToken: {
+        type: String,
+        default: null
+    },
+    verificationTokenExpires: {
+        type: Date,
+        default: null
     }
-},{
+}, {
     timestamps: true
-})
+});
 
 userSchema.pre('save', async function () {
-  if (!this.isModified('password')) return ;
+  if (!this.password || !this.isModified('password')) return;
   this.password = await bcrypt.hash(this.password, 10);
 });
 

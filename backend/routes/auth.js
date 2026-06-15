@@ -1,10 +1,11 @@
 import express from "express";
-import { register, login, getMe, createAdmin, doctorRegisterRequest, verifyDoctorEmail, setupDoctorAccount } from "../controller/auth.js";
+import { startRegistration, completeRegistration, login, getMe, createAdmin, doctorRegisterRequest, verifyDoctorEmail, setupDoctorAccount } from "../controller/auth.js";
 import { authorize, protect } from "../middleware/auth.js";
 
 const router = express.Router();
 
-router.post("/register", register);
+router.post("/register-start", startRegistration);
+router.post('/register-complete', completeRegistration);
 router.post("/login", login);
 router.post("/create-admin", protect, authorize("admin"), createAdmin)
 router.get("/me", protect, getMe); // get logged-in user info
