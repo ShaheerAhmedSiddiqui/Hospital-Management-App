@@ -38,7 +38,7 @@ export const cancelAppointment  = (id: string) => api.delete(`/appointments/${id
 
 // patients
 export const getAllPatients      = () => api.get('/patients');
-
+export const updatePatientProfile = (profileData: Record<string, any>) => api.put('/patients/me', profileData);
 // departments
 export const getAllDepartments   = () => api.get('/departments');
 export const createDepartment   = (data: object) => api.post('/departments', data);

@@ -174,22 +174,22 @@ export const verifyDoctorEmail = async (req, res) => {
 export const setupDoctorAccount = async (req, res) => {
   const { password, confirmPassword } = req.body;
   // 👇 PLACE THIS AT THE TOP OF TRY BLOCK TO SEE INDEPENDENT TRUTH 👇
-console.log("--- DEBUGGING SETUP ACCOUNT ---");
-console.log("Token Received from Frontend URL:", req.params.token);
+  console.log("--- DEBUGGING SETUP ACCOUNT ---");
+  console.log("Token Received from Frontend URL:", req.params.token);
 
-// Try to find the request ONLY by the token to see what state it is in
-const rawDoc = await DoctorRequest.findOne({ setupToken: req.params.token });
-if (!rawDoc) {
-  console.log("❌ CRITICAL: No document exists in DB with this setupToken!");
-} else {
-  console.log("✅ Document Found!");
-  console.log("Current DB Approval Status:", rawDoc.approvalStatus);
-  console.log("Does status match 'registeration_approved'?", rawDoc.approvalStatus === 'registeration_approved');
-  console.log("DB Expiration Time:", rawDoc.setupTokenExpires);
-  console.log("Current Server Time:", new Date());
-  console.log("Is the token expired?", rawDoc.setupTokenExpires < new Date());
-}
-console.log("--------------------------------");
+  // Try to find the request ONLY by the token to see what state it is in
+  const rawDoc = await DoctorRequest.findOne({ setupToken: req.params.token });
+  if (!rawDoc) {
+    console.log("❌ CRITICAL: No document exists in DB with this setupToken!");
+  } else {
+    console.log("✅ Document Found!");
+    console.log("Current DB Approval Status:", rawDoc.approvalStatus);
+    console.log("Does status match 'registeration_approved'?", rawDoc.approvalStatus === 'registeration_approved');
+    console.log("DB Expiration Time:", rawDoc.setupTokenExpires);
+    console.log("Current Server Time:", new Date());
+    console.log("Is the token expired?", rawDoc.setupTokenExpires < new Date());
+  }
+  console.log("--------------------------------");
   try {
     if (!password || !confirmPassword) {
       return res.status(400).json({ message: 'Both password fields are required' });
@@ -215,7 +215,7 @@ console.log("--------------------------------");
     const userExists = await User.findOne({ email });
     if (userExists) {
       const doctorExists = await Doctor.findOne({ userId: userExists._id });
-      
+
       if (doctorExists) {
         // A twin request already successfully processed this! Clean up and return success.
         request.approvalStatus = 'account_created';
@@ -227,7 +227,7 @@ console.log("--------------------------------");
           message: 'Account created successfully. You can now login.',
         });
       }
-      
+
       return res.status(400).json({ message: "An account with this email already exists." });
     }
 
@@ -241,7 +241,7 @@ console.log("--------------------------------");
     });
 
     await Doctor.create({
-      userId: user._id, 
+      userId: user._id,
       specialization,
       fees: null,
       experience: "",
@@ -255,9 +255,9 @@ console.log("--------------------------------");
 
     try {
       await sendEmail({
-      to: email,
-      subject: 'Welcome to the Hospital System! Account Created', 
-      html: `
+        to: email,
+        subject: 'Welcome to the Hospital System! Account Created',
+        html: `
         <h2>Hello Dr. ${name},</h2>
         <p>Your professional account has been successfully set up and is ready to use.</p>
         <p>You can now log in to your dashboard using your email and the password you just created.</p>
@@ -265,7 +265,7 @@ console.log("--------------------------------");
           Login to Dashboard
         </a>
       `,
-    });
+      });
     } catch (error) {
       console.error("Background Email delivery failed:", emailError.message);
     }
