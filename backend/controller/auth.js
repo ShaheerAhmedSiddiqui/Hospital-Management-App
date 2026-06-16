@@ -75,7 +75,7 @@ export const completeRegistration = async (req, res) => {
     if (!password || password.length < 6) {
       return res.status(400).json({ message: "Password must be at least 6 characters long." });
     }
-
+    
     // 1 — Find the user with a matching token that hasn't expired yet
     const user = await User.findOne({
       verificationToken: token,
@@ -126,7 +126,9 @@ export const login = async (req, res) => {
     }
 
     const isMatch = await user.matchPassword(password);
-
+    if(!user.isVerified){
+      return res.status(401).json({message: "Email Not Verfied"})
+    }
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid email or password" });
     }

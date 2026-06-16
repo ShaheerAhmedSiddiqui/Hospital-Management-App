@@ -20,7 +20,6 @@ const NAV_LINKS = {
     { to: '/admin/doctors',         label: 'Doctors' },
     { to: '/admin/patients',        label: 'Patients' },
     { to: '/admin/appointments',    label: 'Appointments' },
-    { to: '/admin/departments',     label: 'Departments' },
     { to: '/admin/users',     label: 'Users' },
   ],
 };
