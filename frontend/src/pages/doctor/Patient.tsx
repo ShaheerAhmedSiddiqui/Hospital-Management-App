@@ -9,7 +9,7 @@ interface PatientSummary {
   email?: string;
   phone?: string;
   totalVisits: number;
-  lastVisit: string;
+  lastVisit: Date; 
   upcoming: boolean;
 }
 
@@ -26,17 +26,20 @@ export default function DoctorPatients() {
 
   // group appointments by patient
   const patientMap = new Map<string, PatientSummary>();
+  
   appointments.forEach(a => {
     const id = a.patientId?.userId?._id ?? a.patientId?._id;
-    if (!id) return;
+    // Guard against missing IDs or missing dates
+    if (!id || !a.date) return; 
 
-    const existing = patientMap.get(id);
+    const appointmentDate = new Date(a.date); 
     const isUpcoming = a.status === 'pending' || a.status === 'confirmed';
+    const existing = patientMap.get(id);
 
     if (existing) {
       existing.totalVisits += 1;
-      if (new Date(a.date) > new Date(existing.lastVisit)) {
-        existing.lastVisit = a.date;
+      if (appointmentDate.getTime() > existing.lastVisit.getTime()) {
+        existing.lastVisit = appointmentDate;
       }
       if (isUpcoming) existing.upcoming = true;
     } else {
@@ -44,7 +47,7 @@ export default function DoctorPatients() {
         id,
         name: a.patientId?.userId?.name ?? 'Patient',
         totalVisits: 1,
-        lastVisit: a.date,
+        lastVisit: appointmentDate, // Passed cleanly here
         upcoming: isUpcoming,
       });
     }
@@ -52,7 +55,8 @@ export default function DoctorPatients() {
 
   const patients = Array.from(patientMap.values())
     .filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => new Date(b.lastVisit).getTime() - new Date(a.lastVisit).getTime());
+    // 🧠 4. Clean sorting directly via the pre-parsed Date objects
+    .sort((a, b) => b.lastVisit.getTime() - a.lastVisit.getTime());
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -117,7 +121,8 @@ export default function DoctorPatients() {
                     </td>
                     <td className="py-4 px-6 text-gray-600">{p.totalVisits}</td>
                     <td className="py-4 px-6 text-gray-600">
-                      {new Date(p.lastVisit).toLocaleDateString('en-PK', { dateStyle: 'medium' })}
+                      {/* 🧠 5. No need to wrap p.lastVisit in new Date() anymore! */}
+                      {p.lastVisit.toLocaleDateString('en-PK', { dateStyle: 'medium' })}
                     </td>
                     <td className="py-4 px-6">
                       {p.upcoming ? (

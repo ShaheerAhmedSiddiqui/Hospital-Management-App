@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import { useAuth } from '../../context/AuthContext';
 import { getAppointments } from '../../services/api';
+import { type Appointment } from '../../types';
 
 const STATUS_STYLE = {
   pending:   'bg-amber-50 text-amber-700',
@@ -13,7 +14,7 @@ const STATUS_STYLE = {
 
 export default function PatientDashboard() {
   const { user } = useAuth();
-  const [appointments, setAppointments] = useState([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -92,8 +93,8 @@ export default function PatientDashboard() {
                     </svg>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 text-sm">{a.doctor?.userId?.name || 'Doctor'}</p>
-                    <p className="text-xs text-gray-500">{a.doctor?.specialization} · {a.time} · {new Date(a.date).toLocaleDateString()}</p>
+                    <p className="font-medium text-gray-900 text-sm">{a.doctorId?.userId?.name || 'Doctor'}</p>
+                    <p className="text-xs text-gray-500">{a.doctorId?.specialization} · {a.time} · {new Date(a.date).toLocaleDateString()}</p>
                   </div>
                   <span className={`text-xs font-medium px-2.5 py-1 rounded-full capitalize ${STATUS_STYLE[a.status]}`}>
                     {a.status}

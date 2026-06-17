@@ -28,7 +28,7 @@ export const toggleUserStatus   = (id: string) => api.put(`/admin/users/${id}/to
 
 // doctors
 export const getAllDoctors      = () => api.get('/doctors');
-export const getDoctorProfile      = (id: string) => api.get('/doctors/me');
+export const getDoctorProfile = () => api.get('/doctors/me');
 export const updateDoctorProfile = (id: string, data: object) => api.put(`/doctors/${id}/profile`, data);
 
 // appointments
