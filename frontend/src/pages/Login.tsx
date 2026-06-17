@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react'; // 🧠 Imported React to access Form & Input Event types
 import { useNavigate, Link } from 'react-router-dom';
 import { loginUser } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -10,21 +10,22 @@ export default function Login() {
   const [error, setError]   = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => 
+    setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     try {
       const res = await loginUser(form);
       login(res.data.token, res.data);
-      // redirect based on role
+      
       const role = res.data.role;
       if (role === 'admin')   navigate('/admin/dashboard');
       if (role === 'doctor')  navigate('/doctor/dashboard');
       if (role === 'patient') navigate('/patient/dashboard');
-    } catch (err) {
+    } catch (err: any) { 
       setError(err.response?.data?.message || 'Login failed');
     } finally {
       setLoading(false);
