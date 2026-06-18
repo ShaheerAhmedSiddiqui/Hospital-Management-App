@@ -2,7 +2,7 @@ import User from "../models/user.js";
 import Doctor from "../models/doctor.js";
 import Patient from "../models/patient.js";
 import Appointment from "../models/appointment.js";
-import DoctorRequest from "../models/DoctorRequest.js";
+import DoctorRequest from "../models/doctorRequest.js";
 import {sendEmail} from "../utils/sendEmail.js";
 import bcrypt  from "bcryptjs";
 import crypto from "crypto";

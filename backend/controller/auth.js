@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import User from "../models/user.js"
 import crypto from "crypto";
-import DoctorRequest from "../models/DoctorRequest.js";
+import DoctorRequest from "../models/doctorRequest.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import Doctor from "../models/doctor.js";
 import Patient from "../models/patient.js";
