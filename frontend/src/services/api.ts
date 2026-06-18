@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://3.110.212.177/api/',
+  baseURL: '/api',
 });
 
 api.interceptors.request.use((config) => {
@@ -28,7 +28,7 @@ export const toggleUserStatus   = (id: string) => api.put(`/admin/users/${id}/to
 
 // doctors
 export const getAllDoctors      = () => api.get('/doctors');
-export const getDoctorProfile = () => api.get('/doctors/me');
+export const getDoctorProfile      = () => api.get('/doctors/me');
 export const updateDoctorProfile = (id: string, data: object) => api.put(`/doctors/${id}/profile`, data);
 
 // appointments
