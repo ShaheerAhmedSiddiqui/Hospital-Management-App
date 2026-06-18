@@ -1,21 +1,21 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { startRegistration } from '../services/api'; // 🧠 Using the new multi-step API
+import { startRegistration } from '../services/api';
 
 export default function Register() {
   const [form, setForm] = useState({ name: '', email: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false); // Tracks if mail has been dispatched
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm({ ...form, [e.target.name]: e.target.value });
-
+    
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true); 
+    setLoading(true);
     setError('');
-    
+
     try {
       // Send only name and email to initiate verification sequence
       await startRegistration({ name: form.name, email: form.email });
@@ -28,7 +28,7 @@ export default function Register() {
   };
 
   const fields = [
-    { label: 'Full name',     name: 'name',  type: 'text',  placeholder: 'Ali Khan' },
+    { label: 'Full name', name: 'name', type: 'text', placeholder: 'Ali Khan' },
     { label: 'Email address', name: 'email', type: 'email', placeholder: 'you@example.com' }
   ];
 
@@ -39,7 +39,7 @@ export default function Register() {
           <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-600 rounded-2xl mb-4">
             <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Create patient account</h1>
@@ -53,7 +53,7 @@ export default function Register() {
               <div className="text-4xl">📩</div>
               <h3 className="text-lg font-semibold text-gray-900">Verify your email</h3>
               <p className="text-gray-600 text-sm leading-relaxed">
-                We sent a secure validation link to <strong className="text-gray-800">{form.email}</strong>. 
+                We sent a secure validation link to <strong className="text-gray-800">{form.email}</strong>.
                 Please open your inbox and click the link to configure your password.
               </p>
               <div className="pt-2">
