@@ -43,4 +43,7 @@ jobs:
           docker run -d \
             --name hospital-frontend \
             -p 3000:80 \
-            ${{ secrets.DOCKER_USERNAME }}/hospital-frontend
+            ${{ secrets.DOCKER_USERNAME }}/hospital-
+              
+      - name: Free up disk space
+        run: docker system prune -f        

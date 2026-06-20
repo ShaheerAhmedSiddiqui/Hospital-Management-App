@@ -46,3 +46,6 @@ jobs:
             -e MONGODB_URI="${{ secrets.MONGODB_URI }}" \
             -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
             ${{ secrets.DOCKER_USERNAME }}/hospital-backend
+
+      - name: Free up disk space
+        run: docker system prune -f      
