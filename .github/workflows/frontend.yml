@@ -42,9 +42,12 @@ jobs:
           export MONGODB_URI="${{ secrets.MONGODB_URI }}"
           export JWT_SECRET="${{ secrets.JWT_SECRET }}"
           
-          # Pull and update using the root compose file (-f ../docker-compose.yml)
-          docker compose -f ../docker-compose.yml pull hospital-frontend
-          docker compose -f ../docker-compose.yml up -d hospital-frontend
+          # Move up out of the frontend folder into the project root
+          cd ..
+          
+          # Pull and cleanly recreate the container
+          docker compose pull hospital-frontend
+          docker compose up -d hospital-frontend
               
       - name: Free up disk space
-        run: docker system prune -f        
+        run: docker system prune -f
