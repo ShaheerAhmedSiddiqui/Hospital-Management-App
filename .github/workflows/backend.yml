@@ -8,6 +8,7 @@ on:
       - 'backend/**'
       - '.github/workflows/backend.yml'
       - 'docker-compose.yml'
+
 jobs:
   deploy:
     runs-on: self-hosted
@@ -41,9 +42,12 @@ jobs:
           export MONGODB_URI="${{ secrets.MONGODB_URI }}"
           export JWT_SECRET="${{ secrets.JWT_SECRET }}"
           
-          # Pull and update using the root compose file (-f ../docker-compose.yml)
-          docker compose -f ../docker-compose.yml pull hospital-backend
-          docker compose -f ../docker-compose.yml up -d hospital-backend
+          # Move up out of the backend folder into the project root
+          cd ..
+          
+          # Pull and cleanly recreate the container
+          docker compose pull hospital-backend
+          docker compose up -d hospital-backend
 
       - name: Free up disk space
-        run: docker system prune -f      
+        run: docker system prune -f
