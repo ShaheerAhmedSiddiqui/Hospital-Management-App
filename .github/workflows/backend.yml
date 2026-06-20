@@ -34,19 +34,16 @@ jobs:
         run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/hospital-backend
 
-      - name: Deploy Backend Container
+      - name: Deploy Backend Container via Docker Compose
         run: |
-          docker stop hospital-backend || true
-          docker rm hospital-backend || true
-
-          docker pull ${{ secrets.DOCKER_USERNAME }}/hospital-backend
-
-          docker run -d \
-            --name hospital-backend \
-            -p 5000:5000 \
-            -e MONGODB_URI="${{ secrets.MONGODB_URI }}" \
-            -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
-            ${{ secrets.DOCKER_USERNAME }}/hospital-backend
+          # Export variables for the docker-compose.yml file to read
+          export DOCKER_USERNAME="${{ secrets.DOCKER_USERNAME }}"
+          export MONGODB_URI="${{ secrets.MONGODB_URI }}"
+          export JWT_SECRET="${{ secrets.JWT_SECRET }}"
+          
+          # Pull and update using the root compose file (-f ../docker-compose.yml)
+          docker compose -f ../docker-compose.yml pull hospital-backend
+          docker compose -f ../docker-compose.yml up -d hospital-backend
 
       - name: Free up disk space
         run: docker system prune -f      
