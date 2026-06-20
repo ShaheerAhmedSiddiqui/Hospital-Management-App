@@ -43,8 +43,12 @@ jobs:
           # Pull the fresh image
           docker pull ${{ secrets.DOCKER_USERNAME }}/hospital-frontend
           
-          # Run container directly on port 80 (No complex multi-line backslashes)
-          docker run -d --name hospital-frontend -p 80:80 ${{ secrets.DOCKER_USERNAME }}/hospital-frontend
+          # Run container attached to the shared bridge network on port 80
+          docker run -d \
+            --name hospital-frontend \
+            --network hospital-network \
+            -p 80:80 \
+            ${{ secrets.DOCKER_USERNAME }}/hospital-frontend
 
       - name: Free up disk space
         run: docker system prune -f
