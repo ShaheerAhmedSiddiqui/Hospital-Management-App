@@ -45,9 +45,8 @@ jobs:
           # Move up out of the backend folder into the project root
           cd ..
           
-          # Pull and cleanly recreate the container
-          docker compose pull hospital-backend
-          docker compose up -d hospital-backend
+          docker-compose pull hospital-backend
+          docker-compose up -d hospital-backend
 
       - name: Free up disk space
         run: docker system prune -f
