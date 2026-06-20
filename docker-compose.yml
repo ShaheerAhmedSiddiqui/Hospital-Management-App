@@ -21,7 +21,7 @@ services:
     container_name: hospital-frontend
     restart: always
     ports:
-      - "80:80" # Maps public standard port 80 directly to Nginx inside the container
+      - "80:80" 
     depends_on:
       - hospital-backend
     networks:
