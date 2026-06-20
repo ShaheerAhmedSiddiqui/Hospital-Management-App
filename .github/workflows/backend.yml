@@ -7,7 +7,6 @@ on:
     paths:
       - 'backend/**'
       - '.github/workflows/backend.yml'
-      - 'docker-compose.yml'
 
 jobs:
   deploy:
@@ -35,18 +34,17 @@ jobs:
         run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/hospital-backend
 
-      - name: Deploy Backend Container via Docker Compose
+      - name: Deploy Backend Container
         run: |
-          # Export variables for the docker-compose.yml file to read
-          export DOCKER_USERNAME="${{ secrets.DOCKER_USERNAME }}"
-          export MONGODB_URI="${{ secrets.MONGODB_URI }}"
-          export JWT_SECRET="${{ secrets.JWT_SECRET }}"
+          # Stop and remove old container if it exists
+          docker stop hospital-backend || true
+          docker rm hospital-backend || true
           
-          # Move up out of the backend folder into the project root
-          cd ..
+          # Pull the fresh image
+          docker pull ${{ secrets.DOCKER_USERNAME }}/hospital-backend
           
-          docker-compose pull hospital-backend
-          docker-compose up -d hospital-backend
+          # Run backend container on port 5000 with environment variables inline
+          docker run -d --name hospital-backend -p 5000:5000 -e MONGODB_URI="${{ secrets.MONGODB_URI }}" -e JWT_SECRET="${{ secrets.JWT_SECRET }}" ${{ secrets.DOCKER_USERNAME }}/hospital-backend
 
       - name: Free up disk space
         run: docker system prune -f

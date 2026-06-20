@@ -7,7 +7,6 @@ on:
     paths:
       - 'frontend/**'
       - '.github/workflows/frontend.yml'
-      - 'docker-compose.yml'
 
 jobs:
   deploy:
@@ -35,18 +34,17 @@ jobs:
         run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/hospital-frontend
 
-      - name: Deploy Frontend Container via Docker Compose
+      - name: Deploy Frontend Container
         run: |
-          # Export variables for the docker-compose.yml file to read
-          export DOCKER_USERNAME="${{ secrets.DOCKER_USERNAME }}"
-          export MONGODB_URI="${{ secrets.MONGODB_URI }}"
-          export JWT_SECRET="${{ secrets.JWT_SECRET }}"
+          # Stop and remove old container if it exists
+          docker stop hospital-frontend || true
+          docker rm hospital-frontend || true
           
-          # Move up out of the frontend folder into the project root
-          cd ..
+          # Pull the fresh image
+          docker pull ${{ secrets.DOCKER_USERNAME }}/hospital-frontend
           
-          docker-compose pull hospital-frontend
-          docker-compose up -d hospital-frontend
-              
+          # Run container directly on port 80 (No complex multi-line backslashes)
+          docker run -d --name hospital-frontend -p 80:80 ${{ secrets.DOCKER_USERNAME }}/hospital-frontend
+
       - name: Free up disk space
         run: docker system prune -f
