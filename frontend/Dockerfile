@@ -1,17 +1,17 @@
-FROM node:24 AS build
-
+# Step 1: Build the React application
+FROM node:18-alpine AS build
 WORKDIR /app
-
 COPY package*.json ./
-
 RUN npm install
-
 COPY . .
-
 RUN npm run build
 
+# Step 2: Serve with Nginx
 FROM nginx:alpine
-
-COPY --from=build /app/dist /usr/share/nginx/html
+# Copy the custom nginx config we made above
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy built static files from Step 1
+COPY --from=build /app/dist /usr/share/nginx/html 
 
 EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

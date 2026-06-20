@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  hospital-backend:
+    image: ${DOCKER_USERNAME}/hospital-backend:latest
+    container_name: hospital-backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGODB_URI=${MONGODB_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      # Pass your missing email variables here as well
+      - EMAIL_USER=iconicshaheer05@gmail.com
+      - EMAIL_PASS=ndje mvbv kwww egam
+    networks:
+      - hospital-network
+
+  hospital-frontend:
+    image: ${DOCKER_USERNAME}/hospital-frontend:latest
+    container_name: hospital-frontend
+    restart: always
+    ports:
+      - "80:80" # Maps public standard port 80 directly to Nginx inside the container
+    depends_on:
+      - hospital-backend
+    networks:
+      - hospital-network
+
+networks:
+  hospital-network:
+    driver: bridge
