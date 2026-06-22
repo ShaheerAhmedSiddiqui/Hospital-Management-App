@@ -61,8 +61,8 @@ export default function AllAppointments() {
           {FILTERS.map(f => (
             <button key={f} onClick={() => setFilter(f)}
               className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${filter === f
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                ? 'bg-purple-600 text-white'
+                : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
                 }`}>
               {f}
             </button>
@@ -108,7 +108,14 @@ export default function AllAppointments() {
                       <p className="text-xs text-gray-400">{a.doctorId?.specialization}</p>
                     </td>
                     <td className="py-4 px-6 text-gray-600">
-                      {a.date ? new Date(a.date).toLocaleDateString() : '—'} · {a.appointmentDate}
+                      <div>
+                        📅 {a.appointmentDate
+                          ? new Date(a.appointmentDate).toLocaleDateString('en-GB')
+                          : '—'}
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        🕒 {a.timeSlot}
+                      </div>
                     </td>
                     <td className="py-4 px-6">
                       <span className={`text-xs font-medium px-2.5 py-1 rounded-full capitalize ${STATUS_STYLE[a.status]}`}>
