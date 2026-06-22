@@ -4,7 +4,7 @@ import { getAppointments, updateApptStatus } from '../../services/api';
 import type { Appointment } from '../../types';
 
 const STATUS_STYLE: Record<string, string> = {
-  pending:   'bg-amber-50 text-amber-700',
+  pending: 'bg-amber-50 text-amber-700',
   confirmed: 'bg-green-50 text-green-700',
   cancelled: 'bg-red-50 text-red-600',
   completed: 'bg-gray-100 text-gray-600',
@@ -12,9 +12,9 @@ const STATUS_STYLE: Record<string, string> = {
 
 export default function AllAppointments() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [loading,      setLoading]      = useState(true);
-  const [filter,       setFilter]       = useState('all');
-  const [toast,        setToast]        = useState('');
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('all');
+  const [toast, setToast] = useState('');
 
   const fetchAppts = () => {
     setLoading(true);
@@ -60,11 +60,10 @@ export default function AllAppointments() {
         <div className="flex gap-2 mb-6 flex-wrap">
           {FILTERS.map(f => (
             <button key={f} onClick={() => setFilter(f)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${
-                filter === f
+              className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${filter === f
                   ? 'bg-purple-600 text-white'
                   : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-              }`}>
+                }`}>
               {f}
             </button>
           ))}
@@ -74,10 +73,10 @@ export default function AllAppointments() {
           <div className="space-y-3">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="bg-white rounded-2xl border border-gray-100 p-5 animate-pulse flex gap-4">
-                <div className="w-10 h-10 bg-gray-200 rounded-full"/>
+                <div className="w-10 h-10 bg-gray-200 rounded-full" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-3 bg-gray-200 rounded w-48"/>
-                  <div className="h-3 bg-gray-200 rounded w-64"/>
+                  <div className="h-3 bg-gray-200 rounded w-48" />
+                  <div className="h-3 bg-gray-200 rounded w-64" />
                 </div>
               </div>
             ))}
@@ -109,7 +108,7 @@ export default function AllAppointments() {
                       <p className="text-xs text-gray-400">{a.doctorId?.specialization}</p>
                     </td>
                     <td className="py-4 px-6 text-gray-600">
-                      {new Date(a.date).toLocaleDateString()} · {a.appointmentDate}
+                      {a.date ? new Date(a.date).toLocaleDateString() : '—'} · {a.appointmentDate}
                     </td>
                     <td className="py-4 px-6">
                       <span className={`text-xs font-medium px-2.5 py-1 rounded-full capitalize ${STATUS_STYLE[a.status]}`}>
