@@ -8,6 +8,7 @@ import Register        from './pages/Register';
 import DoctorRegister  from './pages/DoctorRegister';
 import DoctorSetup     from './pages/DoctorSetup';
 import Unauthorized    from './pages/Unauthorized';
+import VerifyEmail from './pages/verifyEmail';
 
 // patient
 import PatientDashboard  from './pages/patient/PatientDashboard';
@@ -30,6 +31,7 @@ import AllAppointments   from './pages/admin/Allappointments';
 import ManageUsers       from './pages/admin/ManageUsers';
 import Departments       from './pages/admin/Departments';
 import SetPassword from './pages/setPassword';
+import CreateAdmin from './pages/admin/CreateAdmin';
 
 export default function App() {
   return (
@@ -45,6 +47,7 @@ export default function App() {
           <Route path="/doctor-setup/:token" element={<DoctorSetup />} />
           <Route path="/unauthorized"        element={<Unauthorized />} />
           <Route path="/set-password" element={<SetPassword />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
 
 
           {/* ── patient ── */}
@@ -82,7 +85,8 @@ export default function App() {
             element={<ProtectedRoute roles={['admin']}><ManageUsers /></ProtectedRoute>} />
           <Route path="/admin/departments"
             element={<ProtectedRoute roles={['admin']}><Departments /></ProtectedRoute>} />
-
+<Route path="/admin/create-admin"
+            element={<ProtectedRoute roles={['admin']}><CreateAdmin /></ProtectedRoute>} />
           {/* ── catch all ── */}
           <Route path="*" element={<Navigate to="/login" replace />} />
 

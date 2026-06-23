@@ -26,7 +26,7 @@ export const startRegistration = async (req, res) => {
 
     // 2 — Generate unique verification token and 1-hour expiration timestamp
     const token = crypto.randomBytes(32).toString('hex');
-    const tokenExpiry = Date.now() + 3600000; 
+    const tokenExpiry = Date.now() + 3600000;
 
     // 3 — Save the pending, unverified user to the database
     await User.create({
@@ -59,10 +59,10 @@ export const startRegistration = async (req, res) => {
     });
 
     // 6 — Return success response to frontend once email task finishes running
-    res.status(200).json({ 
-      message: "Verification link dispatched! Please check your email inbox to finalize registration." 
+    res.status(200).json({
+      message: "Verification link dispatched! Please check your email inbox to finalize registration."
     });
-    
+
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -75,7 +75,7 @@ export const completeRegistration = async (req, res) => {
     if (!password || password.length < 6) {
       return res.status(400).json({ message: "Password must be at least 6 characters long." });
     }
-    
+
     // 1 — Find the user with a matching token that hasn't expired yet
     const user = await User.findOne({
       verificationToken: token,
@@ -87,13 +87,13 @@ export const completeRegistration = async (req, res) => {
     }
 
     // 2 — Assign plain text password. 
-    user.password = password; 
-    
+    user.password = password;
+
     // 3 — Activate user credentials and wipe the token out of storage fields
     user.isVerified = true;
     user.verificationToken = null;
     user.verificationTokenExpires = null;
-    
+
     await user.save();
 
     // 4 — Patient profile model record simultaneously
@@ -101,7 +101,7 @@ export const completeRegistration = async (req, res) => {
       userId: user._id,
       phoneNumber: '',
       address: '',
-      gender: 'Other' 
+      gender: 'Other'
     });
 
     res.status(201).json({ message: "Account setup complete! You can now log in securely." });
@@ -126,8 +126,8 @@ export const login = async (req, res) => {
     }
 
     const isMatch = await user.matchPassword(password);
-    if(!user.isVerified){
-      return res.status(401).json({message: "Email Not Verfied"})
+    if (!user.isVerified) {
+      return res.status(401).json({ message: "Email Not Verfied" })
     }
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid email or password" });
@@ -149,12 +149,73 @@ export const login = async (req, res) => {
 export const createAdmin = async (req, res) => {
   try {
     const { name, email, password } = req.body;
-    const user = await User.create({ name, email, password, role: 'admin' });
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      return res.status(400).json({ message: "An account with this email already exists." });
+    }
+
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationTokenExpires = new Date(Date.now() + 1 * 60 * 60 * 1000);
+
+    const user = await User.create({
+      name,
+      email,
+      password,
+      role: 'admin',
+      isVerified: false,
+      verificationToken,
+      verificationTokenExpires
+    });
+    const verificationUrl = `http://localhost:5173/verify-email?token=${verificationToken}`;
+
+    await sendEmail({
+      to: email,
+      subject: "Complete your Administrator Registration",
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 12px;">
+          <h2 style="color: #2563eb; margin-bottom: 10px;">Welcome to the Medical Portal, ${name}!</h2>
+          <p style="color: #374151; line-height: 1.5;">An administrative staff profile has been prepared for you. Please click the button below to safely verify your identity and activate your platform privileges.</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${verificationUrl}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);">Verify Email Account</a>
+          </div>
+          <p style="color: #6b7280; font-size: 12px; border-top: 1px solid #f3f4f6; padding-top: 15px; margin-top: 20px;">
+            This security link will automatically expire in 1 hour. If you didn't request this action, please contact the system administrator immediately.
+          </p>
+        </div>
+      `,
+    });
     res.status(201).json({ _id: user._id, name: user.name, role: user.role });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 }
+
+//verify admin email
+export const verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({ message: "Invalid or missing token" });
+    }
+
+    // Find the user with this verification token
+    const user = await User.findOne({ verificationToken: token });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired verification token" });
+    }
+
+    // Mark user as verified and remove the token
+    user.isVerified = true;
+    user.verificationToken = undefined; 
+    await user.save();
+
+    res.status(200).json({ message: "Email verified successfully! You can now log in." });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 // GET LOGGED IN USER 
 export const getMe = async (req, res) => {

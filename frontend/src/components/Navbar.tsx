@@ -28,6 +28,7 @@ const NAV_LINKS: Record<UserRole, NavLinkItem[]> = {
     { to: '/admin/patients',        label: 'Patients' },
     { to: '/admin/appointments',    label: 'Appointments' },
     { to: '/admin/users',           label: 'Users' },
+    { to: '/admin/create-admin',    label: 'Create Admin' },
   ],
 };
 

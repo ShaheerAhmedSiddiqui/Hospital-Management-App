@@ -17,7 +17,12 @@ export const completeRegistration = (data: { token: string; password: string }) 
 export const getMe              = () => api.get('/auth/me');
 export const doctorRegisterReq  = (data: { name: string; email: string; address: string; specialization: string }) => api.post('/auth/doctor-register-request', data);
 export const setupDoctorAccount = (token: string, data: { password: string; confirmPassword: string }) => api.post(`/auth/doctor-setup/${token}`, data);
-
+export const createAdminAccount = (data: { name: string; email: string; password: string }) => {
+  return api.post('/auth/create-admin', data);
+};
+export const verifyEmailToken = (token: string) => {
+  return api.get<{ message: string }>(`/users/verify-email?token=${token}`);
+};
 // admin
 export const getDashboardStats  = () => api.get('/admin/dashboard');
 export const getAllUsers         = () => api.get('/admin/users');
