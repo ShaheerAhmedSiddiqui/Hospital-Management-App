@@ -8,7 +8,7 @@ import Register        from './pages/Register';
 import DoctorRegister  from './pages/DoctorRegister';
 import DoctorSetup     from './pages/DoctorSetup';
 import Unauthorized    from './pages/Unauthorized';
-import VerifyEmail from './pages/verifyEmail';
+import VerifyEmail from './pages/VerifyEmail';
 
 // patient
 import PatientDashboard  from './pages/patient/PatientDashboard';
