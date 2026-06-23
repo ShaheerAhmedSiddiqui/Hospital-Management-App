@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { verifyEmailToken } from '../services/api'; // Import your new method
-import axios from 'axios';
 
 export default function VerifyEmail() {
     const [searchParams] = useSearchParams();
