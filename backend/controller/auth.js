@@ -126,11 +126,12 @@ export const login = async (req, res) => {
     }
 
     const isMatch = await user.matchPassword(password);
-    if (!user.isVerified) {
-      return res.status(401).json({ message: "Email Not Verfied" })
-    }
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid email or password" });
+    }
+    
+    if (!user.isVerified) {
+      return res.status(401).json({ message: "Email Not Verfied" })
     }
 
     res.json({
