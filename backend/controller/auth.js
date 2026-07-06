@@ -129,7 +129,7 @@ export const login = async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
-    
+
     if (!user.isVerified) {
       return res.status(401).json({ message: "Email Not Verfied" })
     }
@@ -288,7 +288,7 @@ export const verifyDoctorEmail = async (req, res) => {
     request.emailVerifyExpires = undefined;
     await request.save();
 
-
+    console.log(request)
     res.json({ message: 'Email verified successfully. Please wait for admin approval.' });
   } catch (err) {
     res.status(500).json({ message: err.message });
