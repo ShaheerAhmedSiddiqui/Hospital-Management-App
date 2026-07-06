@@ -360,7 +360,7 @@ export const setupDoctorAccount = async (req, res) => {
       email,
       specialization,
       password,
-      isVerified = true,
+      isVerified: true,
       role: 'doctor',
     });
 
