@@ -38,7 +38,7 @@ export const startRegistration = async (req, res) => {
       verificationTokenExpires: tokenExpiry
     });
 
-    const verificationUrl = `http://localhost:5173/set-password?token=${token}`;
+    const verificationUrl = `${process.env.FRONTEND_URL}/set-password?token=${token}`;
 
     // 5 — Dispatch the verification payload inline
     await sendEmail({
@@ -167,7 +167,8 @@ export const createAdmin = async (req, res) => {
       verificationToken,
       verificationTokenExpires
     });
-    const verificationUrl = `http://localhost:5173/verify-email?token=${verificationToken}`;
+
+    const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
 
     await sendEmail({
       to: email,
@@ -209,7 +210,7 @@ export const verifyEmail = async (req, res) => {
 
     // Mark user as verified and remove the token
     user.isVerified = true;
-    user.verificationToken = undefined; 
+    user.verificationToken = undefined;
     await user.save();
 
     res.status(200).json({ message: "Email verified successfully! You can now log in." });
@@ -249,7 +250,8 @@ export const doctorRegisterRequest = async (req, res) => {
       emailVerifyExpires: expires,
     });
 
-    const verifyUrl = `http://localhost:5000/api/auth/verify-email/${token}`;
+    const verifyUrl = `${process.env.BACKEND_URL}/auth/verify-email/${token}`;
+
     await sendEmail({
       to: email,
       subject: 'Verify your email — Hospital System',
@@ -386,7 +388,7 @@ export const setupDoctorAccount = async (req, res) => {
         <h2>Hello Dr. ${name},</h2>
         <p>Your professional account has been successfully set up and is ready to use.</p>
         <p>You can now log in to your dashboard using your email and the password you just created.</p>
-        <a href="http://localhost:5173/login" style="padding:10px 20px;background:#10B981;color:white;border-radius:6px;text-decoration:none;display:inline-block;">
+        <a href="${process.env.FRONTEND_URL}/login" style="padding:10px 20px;background:#10B981;color:white;border-radius:6px;text-decoration:none;display:inline-block;">
           Login to Dashboard
         </a>
       `,

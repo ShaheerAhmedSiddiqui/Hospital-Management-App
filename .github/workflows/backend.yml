@@ -52,7 +52,8 @@ jobs:
             -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
             -e EMAIL_USER="${{ secrets.EMAIL_USER }}" \
             -e EMAIL_PASS="${{ secrets.EMAIL_PASS }}" \
+            -e FRONTEND_URL="${{ secrets.PROD_FRONTEND_URL }}" \
+            -e BACKEND_URL="${{ secrets.PROD_BACKEND_URL }}" \
             ${{ secrets.DOCKER_USERNAME }}/hospital-backend
-
       - name: Free up disk space
         run: docker system prune -f
