@@ -287,6 +287,7 @@ export const verifyDoctorEmail = async (req, res) => {
     request.emailVerifyExpires = undefined;
     await request.save();
 
+
     res.json({ message: 'Email verified successfully. Please wait for admin approval.' });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -354,13 +355,12 @@ export const setupDoctorAccount = async (req, res) => {
       return res.status(400).json({ message: "An account with this email already exists." });
     }
 
-    // Otherwise, proceed normally if it's the genuine first request
     const user = await User.create({
       name,
       email,
       specialization,
       password,
-      isVerified: true,
+      isVerified: request.emailStatus === 'email_verified',
       role: 'doctor',
     });
 
