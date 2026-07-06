@@ -87,8 +87,8 @@ export const approveDoctorRequest = async (req, res) => {
     await request.save();
 
     // this link goes to your React frontend page
-    const setupUrl = `http://localhost:5173/doctor-setup/${setupToken}`;
-
+    const setupUrl = `${process.env.FRONTEND_URL}/doctor-setup/${setupToken}`;
+    
     await sendEmail({
       to:      request.email,
       subject: 'Your doctor registration has been approved!',
