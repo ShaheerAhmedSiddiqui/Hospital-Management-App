@@ -24,11 +24,9 @@ export const startRegistration = async (req, res) => {
       return res.status(400).json({ message: "An account with this email already exists." });
     }
 
-    // 2 — Generate unique verification token and 1-hour expiration timestamp
     const token = crypto.randomBytes(32).toString('hex');
     const tokenExpiry = Date.now() + 3600000;
 
-    // 3 — Save the pending, unverified user to the database
     await User.create({
       name,
       email,
@@ -40,25 +38,63 @@ export const startRegistration = async (req, res) => {
 
     const verificationUrl = `${process.env.FRONTEND_URL}/set-password?token=${token}`;
 
-    // 5 — Dispatch the verification payload inline
-    await sendEmail({
+   await sendEmail({
       to: email,
-      subject: "Complete your Patient Registration",
+      subject: "Activate Your Medical Portal Account",
       html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 12px;">
-          <h2 style="color: #2563eb; margin-bottom: 10px;">Welcome to our Clinic, ${name}!</h2>
-          <p style="color: #374151; line-height: 1.5;">Thank you for initiating your registration. Please click the button below to verify your email address and setup your private account password.</p>
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${verificationUrl}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);">Verify Email & Set Password</a>
-          </div>
-          <p style="color: #6b7280; font-size: 12px; border-top: 1px solid #f3f4f6; padding-top: 15px; margin-top: 20px;">
-            This security link will automatically expire in 1 hour. If you didn't request this action, you can safely ignore this email.
-          </p>
-        </div>
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Activate Your Account</title>
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #f4f6f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed; background-color: #f4f6f9;">
+            <tr>
+              <td align="center" style="padding: 40px 10px;">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                  <tr>
+                    <td align="center" style="background-color: #2563eb; padding: 30px 20px;">
+                      <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;">MediCare Portal</h1>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 40px 30px; background-color: #ffffff;">
+                      <h2 style="margin-top: 0; color: #1e293b; font-size: 20px; font-weight: 600;">Welcome, ${name}!</h2>
+                      <p style="color: #475569; font-size: 16px; line-height: 1.6; margin-bottom: 25px;">
+                        Thank you for registering with our clinic platform. To finalize your patient profile configuration and gain secure medical system entry, please confirm your destination mailbox address below.
+                      </p>
+                      
+                      <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                        <tr>
+                          <td align="center" style="padding: 15px 0 25px 0;">
+                            <a href="${verificationUrl}" target="_blank" style="background-color: #2563eb; color: #ffffff; display: inline-block; padding: 14px 32px; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 8px; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.25);">
+                              Verify Account Setup
+                            </a>
+                          </td>
+                        </tr>
+                      </table>
+
+                      <p style="color: #64748b; font-size: 14px; line-height: 1.5; margin: 0; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                        💡 <strong>Security Notice:</strong> For system integrity, this specific configuration link automatically expires in 1 hour. If you did not initialize this registration window, you can disregard this notification safely.
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 20px 30px; background-color: #f8fafc; text-align: center; border-top: 1px solid #f1f5f9;">
+                      <p style="margin: 0; color: #94a3b8; font-size: 12px;">&copy; 2026 MediCare Health Systems. All rights reserved.</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
       `,
     });
 
-    // 6 — Return success response to frontend once email task finishes running
     res.status(200).json({
       message: "Verification link dispatched! Please check your email inbox to finalize registration."
     });
@@ -76,7 +112,6 @@ export const completeRegistration = async (req, res) => {
       return res.status(400).json({ message: "Password must be at least 6 characters long." });
     }
 
-    // 1 — Find the user with a matching token that hasn't expired yet
     const user = await User.findOne({
       verificationToken: token,
       verificationTokenExpires: { $gt: Date.now() }
@@ -86,10 +121,8 @@ export const completeRegistration = async (req, res) => {
       return res.status(400).json({ message: "Security token is invalid or has expired." });
     }
 
-    // 2 — Assign plain text password. 
     user.password = password;
 
-    // 3 — Activate user credentials and wipe the token out of storage fields
     user.isVerified = true;
     user.verificationToken = null;
     user.verificationTokenExpires = null;
@@ -174,16 +207,37 @@ export const createAdmin = async (req, res) => {
       to: email,
       subject: "Complete your Administrator Registration",
       html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 12px;">
-          <h2 style="color: #2563eb; margin-bottom: 10px;">Welcome to the Medical Portal, ${name}!</h2>
-          <p style="color: #374151; line-height: 1.5;">An administrative staff profile has been prepared for you. Please click the button below to safely verify your identity and activate your platform privileges.</p>
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${verificationUrl}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);">Verify Email Account</a>
-          </div>
-          <p style="color: #6b7280; font-size: 12px; border-top: 1px solid #f3f4f6; padding-top: 15px; margin-top: 20px;">
-            This security link will automatically expire in 1 hour. If you didn't request this action, please contact the system administrator immediately.
-          </p>
-        </div>
+        <!DOCTYPE html>
+        <html>
+        <body style="margin: 0; padding: 0; background-color: #f4f6f9; font-family: sans-serif;">
+          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f6f9; padding: 40px 10px;">
+            <tr>
+              <td align="center">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                  <tr>
+                    <td align="center" style="background-color: #4f46e5; padding: 30px 20px;">
+                      <h1 style="color: #ffffff; margin: 0; font-size: 22px;">Administrative Privileges Portal</h1>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 40px 30px;">
+                      <h2 style="margin-top: 0; color: #1e293b; font-size: 18px;">System Provisioning Request</h2>
+                      <p style="color: #475569; font-size: 15px; line-height: 1.6;">An administrative staff user profile has been structured under your identity credentials. Confirm authentication permissions via the initialization matrix link below.</p>
+                      <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                        <tr>
+                          <td align="center" style="padding: 20px 0;">
+                            <a href="${verificationUrl}" target="_blank" style="background-color: #4f46e5; color: #ffffff; display: inline-block; padding: 14px 28px; font-size: 15px; font-weight: bold; text-decoration: none; border-radius: 6px;">Activate Privilege Key</a>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
       `,
     });
     res.status(201).json({ _id: user._id, name: user.name, role: user.role });
@@ -254,14 +308,39 @@ export const doctorRegisterRequest = async (req, res) => {
 
     await sendEmail({
       to: email,
-      subject: 'Verify your email — Hospital System',
+      subject: 'Verify Your Medical Registration Request',
       html: `
-        <h2>Hello Dr. ${name},</h2>
-        <p>Thank you for registering. Please verify your email to submit your request for admin approval.</p>
-        <a href="${verifyUrl}" style="padding:10px 20px;background:#4F46E5;color:white;border-radius:6px;text-decoration:none;">
-          Verify Email
-        </a>
-        <p>This link expires in 24 hours.</p>
+        <!DOCTYPE html>
+        <html>
+        <body style="margin:0;padding:0;background-color:#f4f6f9;font-family:sans-serif;">
+          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#f4f6f9;padding:40px 10px;">
+            <tr>
+              <td align="center">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 10px rgba(0,0,0,0.05);">
+                  <tr>
+                    <td align="center" style="background-color:#0284c7;padding:30px 20px;">
+                      <h1 style="color:#ffffff;margin:0;font-size:22px;">Doctor Credential Screening</h1>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:40px 30px;">
+                      <h2 style="margin-top:0;color:#1e293b;font-size:18px;">Hello Dr. ${name},</h2>
+                      <p style="color:#475569;font-size:15px;line-height:1.6;">Thank you for initiating your integration review process. Please verify ownership of this inbox to route your documentation data directly to administration workflows.</p>
+                      <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                        <tr>
+                          <td align="center" style="padding:20px 0;">
+                            <a href="${verifyUrl}" target="_blank" style="background-color:#0284c7;color:#ffffff;display:inline-block;padding:14px 28px;font-size:15px;font-weight:bold;text-decoration:none;border-radius:6px;">Verify Email Identity</a>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
       `,
     });
 
@@ -383,15 +462,40 @@ export const setupDoctorAccount = async (req, res) => {
     try {
       await sendEmail({
         to: email,
-        subject: 'Welcome to the Hospital System! Account Created',
+        subject: 'Welcome to the Team — Account Activated',
         html: `
-        <h2>Hello Dr. ${name},</h2>
-        <p>Your professional account has been successfully set up and is ready to use.</p>
-        <p>You can now log in to your dashboard using your email and the password you just created.</p>
-        <a href="${process.env.FRONTEND_URL}/login" style="padding:10px 20px;background:#10B981;color:white;border-radius:6px;text-decoration:none;display:inline-block;">
-          Login to Dashboard
-        </a>
-      `,
+          <!DOCTYPE html>
+          <html>
+          <body style="margin:0;padding:0;background-color:#f4f6f9;font-family:sans-serif;">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#f4f6f9;padding:40px 10px;">
+              <tr>
+                <td align="center">
+                  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 10px rgba(0,0,0,0.05);">
+                    <tr>
+                      <td align="center" style="background-color:#10b981;padding:30px 20px;">
+                        <h1 style="color:#ffffff;margin:0;font-size:22px;">Onboarding Complete</h1>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:40px 30px;">
+                        <h2 style="margin-top:0;color:#1e293b;font-size:18px;">Hello Dr. ${name},</h2>
+                        <p style="color:#475569;font-size:15px;line-height:1.6;">Your expert dashboard configuration environment has been generated securely. You may now access core features via the standard gateway.</p>
+                        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                          <tr>
+                            <td align="center" style="padding:20px 0;">
+                              <a href="${process.env.FRONTEND_URL}/login" target="_blank" style="background-color:#10b981;color:#ffffff;display:inline-block;padding:14px 28px;font-size:15px;font-weight:bold;text-decoration:none;border-radius:6px;">Go To Console</a>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </body>
+          </html>
+        `,
       });
     } catch (error) {
       console.error("Background Email delivery failed:", emailError.message);

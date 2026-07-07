@@ -77,34 +77,51 @@ export const approveDoctorRequest = async (req, res) => {
       return res.status(400).json({ message: `Request is already ${request.approvalStatus}` });
     }
 
-    // generate a secure one-time setup token
     const setupToken   = crypto.randomBytes(32).toString('hex');
-    const setupExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    const setupExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     request.approvalStatus = 'registeration_approved';
     request.setupToken         = setupToken;
     request.setupTokenExpires  = setupExpires;
     await request.save();
 
-    // this link goes to your React frontend page
     const setupUrl = `${process.env.FRONTEND_URL}/doctor-setup/${setupToken}`;
     
     await sendEmail({
       to:      request.email,
-      subject: 'Your doctor registration has been approved!',
+      subject: 'Application Approved — Access Credentials Ready',
       html: `
-        <h2>Congratulations Dr. ${request.name}!</h2>
-        <p>Your registration request has been approved by the admin.</p>
-        <p>Please click the button below to set up your password and activate your account:</p>
-        <br/>
-        <a href="${setupUrl}"
-          style="padding:12px 24px;background:#4F46E5;color:white;
-                 border-radius:6px;text-decoration:none;font-size:16px;">
-          Set Up My Account
-        </a>
-        <br/><br/>
-        <p>⚠️ This link expires in <strong>24 hours</strong>.</p>
-        <p>If you did not register, please ignore this email.</p>
+        <!DOCTYPE html>
+        <html>
+        <body style="margin:0;padding:0;background-color:#f4f6f9;font-family:sans-serif;">
+          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#f4f6f9;padding:40px 10px;">
+            <tr>
+              <td align="center">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 10px rgba(0,0,0,0.05);">
+                  <tr>
+                    <td align="center" style="background-color:#4f46e5;padding:30px 20px;">
+                      <h1 style="color:#ffffff;margin:0;font-size:22px;">Registration Board</h1>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:40px 30px;">
+                      <h2 style="margin-top:0;color:#1e293b;font-size:18px;">Congratulations Dr. ${request.name}!</h2>
+                      <p style="color:#475569;font-size:15px;line-height:1.6;">Your credential package review is complete, and verification status is confirmed. Use the gateway utility below to set up your interface securely.</p>
+                      <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                        <tr>
+                          <td align="center" style="padding:20px 0;">
+                            <a href="${setupUrl}" target="_blank" style="background-color:#4f46e5;color:#ffffff;display:inline-block;padding:14px 28px;font-size:15px;font-weight:bold;text-decoration:none;border-radius:6px;">Initialize My Dashboard</a>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
       `,
     });
 
@@ -131,12 +148,33 @@ export const rejectDoctorRequest = async (req, res) => {
     const {name, email} = request;
     await sendEmail({
       to:      email,
-      subject: 'Update on your hospital registration request',
+      subject: 'Registration Update — Portal Review',
       html: `
-        <h2>Hello Dr. ${name},</h2>
-        <p>We regret to inform you that your registration request has not been approved.</p>
-        <p><strong>Reason:</strong> ${req.body.reason || 'No reason provided.'}</p>
-        <p>For further information, please contact the hospital administration.</p>
+        <!DOCTYPE html>
+        <html>
+        <body style="margin:0;padding:0;background-color:#f4f6f9;font-family:sans-serif;">
+          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#f4f6f9;padding:40px 10px;">
+            <tr>
+              <td align="center">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 10px rgba(0,0,0,0.05);">
+                  <tr>
+                    <td align="center" style="background-color:#ef4444;padding:30px 20px;">
+                      <h1 style="color:#ffffff;margin:0;font-size:22px;">Review Verdict</h1>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:40px 30px;">
+                      <h2 style="margin-top:0;color:#1e293b;font-size:18px;">Hello Dr. ${name},</h2>
+                      <p style="color:#475569;font-size:15px;line-height:1.6;">Your submitted practitioner application cannot be processed into runtime files at this stage.</p>
+                      <p style="color:#1e293b;font-size:15px;"><strong>Details:</strong> ${req.body.reason || 'No additional reason specified.'}</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
       `,
     });
 
