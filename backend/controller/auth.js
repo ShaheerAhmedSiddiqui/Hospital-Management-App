@@ -262,9 +262,16 @@ export const verifyEmail = async (req, res) => {
       return res.status(400).json({ message: "Invalid or expired verification token" });
     }
 
-    // Mark user as verified and remove the token
+    const currentTime = Date.now();
+    const tokenExpirationTime = new Date(user.verificationTokenExpires).getTime();
+
+    if (user.verificationTokenExpires && currentTime > tokenExpirationTime) {
+      return res.status(400).json({ message: "Invalid or expired verification token" });
+    }
+
     user.isVerified = true;
     user.verificationToken = undefined;
+    user.verificationTokenExpires = undefined;
     await user.save();
 
     res.status(200).json({ message: "Email verified successfully! You can now log in." });
