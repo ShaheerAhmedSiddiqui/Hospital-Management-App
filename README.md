@@ -427,6 +427,22 @@ Runs on every push to `main` and on pull requests:
 
 ---
 
+
+## 👤 Author
+
+**Shaheer Ahmed Siddiqui**
+BS Software Engineering
+—Sukkur IBA University
+
+📧 Email: mrshaheer75@gmail.com
+
+🔗 LinkedIn: https://www.linkedin.com/in/shaheer-ahmed-siddiqui-b381a1248/
+
+💻 GitHub: https://github.com/ShaheerAhmedSiddiqui/
+
+---
+
+
 <div align="center">
 
 Built with ❤️ using the MERN stack
