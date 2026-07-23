@@ -25,7 +25,7 @@ export default function DoctorRegister() {
     try {
       await doctorRegisterReq(form);
       setSuccess(true);
-    } catch (err: any) { // ✅ Fixed: Typed catch block to 'any' to cleanly read axios properties
+    } catch (err: any) { 
       setError(err.response?.data?.message || 'Submission failed');
     } finally {
       setLoading(false);
