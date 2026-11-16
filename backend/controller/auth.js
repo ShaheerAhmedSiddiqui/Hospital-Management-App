@@ -57,7 +57,7 @@ export const startRegistration = async (req, res) => {
     const verificationUrl = `${process.env.FRONTEND_URL}/set-password?token=${token}`;
 
    await sendEmail({
-      to: safeEmail,
+      to: email,
       subject: "Activate Your Medical Portal Account",
       html: `
         <!DOCTYPE html>
@@ -436,7 +436,7 @@ export const verifyDoctorEmail = async (req, res) => {
 
 // SETUP DOCTOR ACCOUNT
 export const setupDoctorAccount = async (req, res) => {
-  const { password, confirmPassword } = req.body;
+  const { password, confirmPassword } = req.body || {};
   try {
     const token = req.params?.token;
     if (!isValidToken(token)) {
@@ -465,7 +465,11 @@ export const setupDoctorAccount = async (req, res) => {
 
     const { name, email, specialization } = request;
 
-    const userExists = await User.findOne({ email });
+    const safeEmail = normalizeEmail(email);
+    if (!isValidEmail(safeEmail)) {
+      return res.status(400).json({ message: "Invalid registration email." });
+    }
+    const userExists = await User.findOne({ email: safeEmail });
     if (userExists) {
       const doctorExists = await Doctor.findOne({ userId: userExists._id });
 
@@ -508,7 +512,7 @@ export const setupDoctorAccount = async (req, res) => {
 
     try {
       await sendEmail({
-        to: email,
+        to: safeEmail,
         subject: 'Welcome to the Team — Account Activated',
         html: `
           <!DOCTYPE html>
