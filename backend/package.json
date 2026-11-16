@@ -4,7 +4,9 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "test": "node --test",
+    "test:coverage": "node --experimental-test-coverage --test --test-coverage-include=controller/department.js --test-coverage-include=controller/doctor.js --test-coverage-include=controller/patient.js --test-coverage-lines=85 --test-reporter=spec --test-reporter=lcov --test-reporter-destination=stdout --test-reporter-destination=coverage/lcov.info && node scripts/coverage-html.js"
   },
   "author": "",
   "license": "ISC",
