@@ -2,12 +2,19 @@ FROM node:24
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY package.json package-lock.json ./
 
-RUN npm install
+RUN npm ci --omit=dev
 
-COPY . .
+# Copy only application runtime files; do not copy the entire build context.
+COPY index.js ./index.js
+COPY config/ ./config/
+COPY controller/ ./controller/
+COPY middleware/ ./middleware/
+COPY models/ ./models/
+COPY routes/ ./routes/
+COPY utils/ ./utils/
 
 EXPOSE 5000
 
-CMD ["npm","start"]
+CMD ["npm", "start"]
