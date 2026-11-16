@@ -14,3 +14,7 @@ node_modules/
 /public
 # Logs
 *.log
+
+# Generated test coverage reports
+coverage/
+**/coverage/
