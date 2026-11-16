@@ -17,8 +17,11 @@ const rows = records.map((record) => {
   const total = lines.length;
   const covered = lines.filter(([, , hits]) => Number(hits) > 0).length;
   const percent = total ? (covered / total) * 100 : 0;
+  const branchFound = Number(record.match(/^BRF:(\\d+)/m)?.[1] ?? 0);
+  const branchHit = Number(record.match(/^BRH:(\\d+)/m)?.[1] ?? 0);
+  const branchPercent = branchFound ? (branchHit / branchFound) * 100 : null;
   const missing = lines.filter(([, , hits]) => Number(hits) === 0).map(([, line]) => line);
-  return { file, total, covered, percent, missing };
+  return { file, total, covered, percent, branchFound, branchHit, branchPercent, missing };
 });
 
 fs.mkdirSync(outputDir, { recursive: true });
@@ -33,6 +36,9 @@ const body = rows.map((row) => `
 const totalLines = rows.reduce((sum, row) => sum + row.total, 0);
 const coveredLines = rows.reduce((sum, row) => sum + row.covered, 0);
 const overall = totalLines ? (coveredLines / totalLines) * 100 : 0;
+const branchFound = rows.reduce((sum, row) => sum + row.branchFound, 0);
+const branchHit = rows.reduce((sum, row) => sum + row.branchHit, 0);
+const branchOverall = branchFound ? (branchHit / branchFound) * 100 : null;
 
 fs.writeFileSync(output, `<!doctype html>
 <html lang="en">
