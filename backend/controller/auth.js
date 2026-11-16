@@ -6,6 +6,19 @@ import { sendEmail } from "../utils/sendEmail.js";
 import Doctor from "../models/doctor.js";
 import Patient from "../models/patient.js";
 
+
+// Validate untrusted values before they are used in database filters.
+const normalizeEmail = (value) =>
+  typeof value === "string" ? value.trim().toLowerCase() : null;
+
+const isValidEmail = (value) =>
+  typeof value === "string" &&
+  value.length <= 254 &&
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
+const isValidToken = (value) =>
+  typeof value === "string" && /^[a-f0-9]{64}$/i.test(value);
+
 //  TOKEN 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -16,7 +29,12 @@ const generateToken = (id) => {
 //  REGISTER 
 export const startRegistration = async (req, res) => {
   try {
-    const { name, email } = req.body;
+    const { name } = req.body;
+    const email = normalizeEmail(req.body?.email);
+
+    if (typeof name !== "string" || !name.trim() || name.length > 100 || !isValidEmail(email)) {
+      return res.status(400).json({ message: "Valid name and email are required." });
+    }
 
     // 1 — Check if the user already exists
     const existingUser = await User.findOne({ email });
@@ -106,9 +124,13 @@ export const startRegistration = async (req, res) => {
 
 export const completeRegistration = async (req, res) => {
   try {
-    const { token, password } = req.body;
+    const { password } = req.body;
+    const token = req.body?.token;
 
-    if (!password || password.length < 6) {
+    if (!isValidToken(token)) {
+      return res.status(400).json({ message: "Invalid verification token." });
+    }
+    if (typeof password !== "string" || password.length < 6 || password.length > 128) {
       return res.status(400).json({ message: "Password must be at least 6 characters long." });
     }
 
@@ -146,10 +168,11 @@ export const completeRegistration = async (req, res) => {
 // LOGIN 
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const email = normalizeEmail(req.body?.email);
+    const password = req.body?.password;
 
-    if (!email || !password) {
-      return res.status(400).json({ message: "Email and password required" });
+    if (!isValidEmail(email) || typeof password !== "string" || !password || password.length > 128) {
+      return res.status(400).json({ message: "Valid email and password required" });
     }
 
     const user = await User.findOne({ email });
@@ -182,8 +205,19 @@ export const login = async (req, res) => {
 // Create Admin
 export const createAdmin = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-    const userExists = await User.findOne({ email });
+    const { name, password } = req.body;
+    const email = normalizeEmail(req.body?.email);
+
+    if (
+      typeof name !== "string" || !name.trim() || name.length > 100 ||
+      !isValidEmail(email) ||
+      typeof password !== "string" || password.length < 6 || password.length > 128
+    ) {
+      return res.status(400).json({ message: "Valid name, email, and password are required." });
+    }
+
+    const safeEmail = normalizeEmail(email);
+    const userExists = await User.findOne({ email: safeEmail });
     if (userExists) {
       return res.status(400).json({ message: "An account with this email already exists." });
     }
@@ -249,14 +283,15 @@ export const createAdmin = async (req, res) => {
 //verify admin email
 export const verifyEmail = async (req, res) => {
   try {
-    const { token } = req.query;
+    const token = req.query?.token;
 
-    if (!token) {
+    if (!isValidToken(token)) {
       return res.status(400).json({ message: "Invalid or missing token" });
     }
 
-    // Find the user with this verification token
-    const user = await User.findOne({ verificationToken: token });
+    // Find the user with this validated verification token
+    const safeToken = token;
+    const user = await User.findOne({ verificationToken: safeToken });
 
     if (!user) {
       return res.status(400).json({ message: "Invalid or expired verification token" });
@@ -294,9 +329,19 @@ export const getMe = async (req, res) => {
 
 // DOCTOR REGISTER REQUEST
 export const doctorRegisterRequest = async (req, res) => {
-  const { name, email, address, specialization } = req.body;
+  const { name, address, specialization } = req.body;
+  const email = normalizeEmail(req.body?.email);
 
   try {
+    if (
+      typeof name !== "string" || !name.trim() || name.length > 100 ||
+      !isValidEmail(email) ||
+      typeof address !== "string" || address.length > 500 ||
+      typeof specialization !== "string" || !specialization.trim() || specialization.length > 100
+    ) {
+      return res.status(400).json({ message: "Valid registration details are required." });
+    }
+
     const existing = await DoctorRequest.findOne({ email });
     if (existing) {
       return res.status(400).json({ message: 'A request with this email already exists' });
@@ -362,8 +407,14 @@ export const doctorRegisterRequest = async (req, res) => {
 // VERIFY DOCTOR EMAIL
 export const verifyDoctorEmail = async (req, res) => {
   try {
+    const token = req.params?.token;
+    if (!isValidToken(token)) {
+      return res.status(400).json({ message: "Token is invalid or has expired" });
+    }
+    const safeToken = token;
+
     const request = await DoctorRequest.findOne({
-      emailVerifyToken: req.params.token,
+      emailVerifyToken: safeToken,
       emailVerifyExpires: { $gt: Date.now() },
     });
 
@@ -385,26 +436,15 @@ export const verifyDoctorEmail = async (req, res) => {
 
 // SETUP DOCTOR ACCOUNT
 export const setupDoctorAccount = async (req, res) => {
-  const { password, confirmPassword } = req.body;
-  // 👇 PLACE THIS AT THE TOP OF TRY BLOCK TO SEE INDEPENDENT TRUTH 👇
-  console.log("--- DEBUGGING SETUP ACCOUNT ---");
-  console.log("Token Received from Frontend URL:", req.params.token);
-
-  // Try to find the request ONLY by the token to see what state it is in
-  const rawDoc = await DoctorRequest.findOne({ setupToken: req.params.token });
-  if (!rawDoc) {
-    console.log("❌ CRITICAL: No document exists in DB with this setupToken!");
-  } else {
-    console.log("✅ Document Found!");
-    console.log("Current DB Approval Status:", rawDoc.approvalStatus);
-    console.log("Does status match 'registeration_approved'?", rawDoc.approvalStatus === 'registeration_approved');
-    console.log("DB Expiration Time:", rawDoc.setupTokenExpires);
-    console.log("Current Server Time:", new Date());
-    console.log("Is the token expired?", rawDoc.setupTokenExpires < new Date());
-  }
-  console.log("--------------------------------");
+  const { password, confirmPassword } = req.body || {};
   try {
-    if (!password || !confirmPassword) {
+    const token = req.params?.token;
+    if (!isValidToken(token)) {
+      return res.status(400).json({ message: "Setup link is invalid or has expired. Please contact admin." });
+    }
+    const safeToken = token;
+
+    if (typeof password !== "string" || typeof confirmPassword !== "string" || password.length < 6 || password.length > 128) {
       return res.status(400).json({ message: 'Both password fields are required' });
     }
     if (password !== confirmPassword) {
@@ -412,7 +452,7 @@ export const setupDoctorAccount = async (req, res) => {
     }
 
     const request = await DoctorRequest.findOne({
-      setupToken: req.params.token,
+      setupToken: safeToken,
       setupTokenExpires: { $gt: new Date() },
       approvalStatus: 'registeration_approved',
     });
@@ -425,7 +465,11 @@ export const setupDoctorAccount = async (req, res) => {
 
     const { name, email, specialization } = request;
 
-    const userExists = await User.findOne({ email });
+    const safeEmail = normalizeEmail(email);
+    if (!isValidEmail(safeEmail)) {
+      return res.status(400).json({ message: "Invalid registration email." });
+    }
+    const userExists = await User.findOne({ email: safeEmail });
     if (userExists) {
       const doctorExists = await Doctor.findOne({ userId: userExists._id });
 
@@ -446,7 +490,7 @@ export const setupDoctorAccount = async (req, res) => {
 
     const user = await User.create({
       name,
-      email,
+      email: safeEmail,
       specialization,
       password,
       isVerified: request.emailStatus === 'email_verified',
@@ -468,7 +512,7 @@ export const setupDoctorAccount = async (req, res) => {
 
     try {
       await sendEmail({
-        to: email,
+        to: safeEmail,
         subject: 'Welcome to the Team — Account Activated',
         html: `
           <!DOCTYPE html>
