@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Appointment from '../models/appointment.js';
 import Patient from '../models/patient.js';
 import Doctor from '../models/doctor.js';
@@ -5,81 +6,155 @@ import { sendEmail } from '../utils/sendEmail.js'
 // ─────────────────────────────────────────────
 // POST /api/appointments
 // ─────────────────────────────────────────────
+
+
 export const bookAppointment = async (req, res) => {
   const { doctorId, date, time, reason } = req.body;
 
   try {
-    // 1 — Validate doctor exists
-    const doctor = await Doctor.findById(doctorId);
+    // 1. Validate doctor ID
+    if (
+      typeof doctorId !== 'string' ||
+      !mongoose.isObjectIdOrHexString(doctorId)
+    ) {
+      return res.status(400).json({ message: 'Invalid doctor ID' });
+    }
+
+    // 2. Validate date format
+    if (
+      typeof date !== 'string' ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(date)
+    ) {
+      return res.status(400).json({ message: 'Invalid appointment date' });
+    }
+
+    const [year, month, day] = date.split('-').map(Number);
+
+    const validDate = new Date(year, month - 1, day);
+
+    if (
+      validDate.getFullYear() !== year ||
+      validDate.getMonth() !== month - 1 ||
+      validDate.getDate() !== day
+    ) {
+      return res.status(400).json({ message: 'Invalid calendar date' });
+    }
+
+    // 3. Validate time
+    if (
+      typeof time !== 'string' ||
+      !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)
+    ) {
+      return res.status(400).json({ message: 'Invalid appointment time' });
+    }
+
+    // 4. Validate reason
+    if (
+      typeof reason !== 'string' ||
+      reason.length > 500
+    ) {
+      return res.status(400).json({ message: 'Invalid appointment reason' });
+    }
+
+    // 5. Use validated values
+    const safeDoctorId = new mongoose.Types.ObjectId(doctorId);
+    const safeTime = time;
+    const appointmentDate = validDate;
+
+    // 6. Validate doctor exists
+    const doctor = await Doctor.findById(safeDoctorId);
+
     if (!doctor) {
       return res.status(404).json({ message: 'Doctor not found' });
     }
 
-    // 2 — convert target date into exact 3-letter day format ("Mon", "Tue")
-    const [year, month, day] = date.split('-').map(Number);
-    const targetDate = new Date(year, month - 1, day);
-    const dayOfWeek = targetDate.toLocaleDateString('en-US', { weekday: 'short' }); 
+    // 7. Get day of week
+    const dayOfWeek = appointmentDate.toLocaleDateString(
+      'en-US',
+      { weekday: 'short' }
+    );
 
-    // 3 — Check if the requested time falls within the doctor's time ranges
+    // 8. Check doctor's availability
     const isWithinAvailability = doctor.availableSlots?.some(slot => {
       if (slot.day !== dayOfWeek) return false;
-      
-      // Assumes 24-hour time strings (e.g., "09:00" <= "10:30" <= "13:00")
-      return time >= slot.startTime && time <= slot.endTime;
+
+      return safeTime >= slot.startTime &&
+             safeTime <= slot.endTime;
     });
 
     if (!isWithinAvailability) {
-      return res.status(400).json({ 
-        message: `Doctor is not available at ${time} on ${dayOfWeek}.` 
+      return res.status(400).json({
+        message: `Doctor is not available at ${safeTime} on ${dayOfWeek}.`
       });
     }
 
-    // 4 — Find or create Patient document for the authenticated user
-    let patient = await Patient.findOne({ userId: req.user._id });
+    // 9. Find or create patient
+    let patient = await Patient.findOne({
+      userId: req.user._id
+    });
+
     if (!patient) {
-      patient = await Patient.create({ userId: req.user._id });
+      patient = await Patient.create({
+        userId: req.user._id
+      });
     }
 
-    // 5 — Prevent duplicate bookings for the same slot
+    // 10. Prevent duplicate bookings
     const duplicate = await Appointment.findOne({
-      doctorId: doctorId,
+      doctorId: safeDoctorId,
       patientId: patient._id,
-      appointmentDate: new Date(date),
-      timeSlot: time,
-      status: { $in: ['pending', 'confirmed'] },
+      appointmentDate: appointmentDate,
+      timeSlot: safeTime,
+      status: { $in: ['pending', 'confirmed'] }
     });
 
     if (duplicate) {
       return res.status(400).json({
-        message: 'You already have a pending or confirmed appointment at this exact time.',
+        message: 'You already have a pending or confirmed appointment at this exact time.'
       });
     }
 
-    // 6 — Create appointment using exact schema keys (notes, fees)
+    // 11. Create appointment
     const appointment = await Appointment.create({
-      doctorId: doctorId,
+      doctorId: safeDoctorId,
       patientId: patient._id,
-      appointmentDate: new Date(date),
-      timeSlot: time,
-      notes: reason,      
-      fees: doctor.fees, 
+      appointmentDate: appointmentDate,
+      timeSlot: safeTime,
+      notes: reason,
+      fees: doctor.fees
     });
 
-    // 7 — Populate data for client consumption
+    // 12. Populate appointment data
     const populated = await Appointment.findById(appointment._id)
-      .populate({ path: 'doctorId', populate: { path: 'userId', select: 'name email' } })
-      .populate({ path: 'patientId', populate: { path: 'userId', select: 'name email' } });
+      .populate({
+        path: 'doctorId',
+        populate: {
+          path: 'userId',
+          select: 'name email'
+        }
+      })
+      .populate({
+        path: 'patientId',
+        populate: {
+          path: 'userId',
+          select: 'name email'
+        }
+      });
 
-    // Success response to prevent frontend from hanging
     return res.status(201).json({
       message: 'Appointment booked successfully!',
       data: populated
     });
 
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error('Book appointment error:', err);
+
+    return res.status(500).json({
+      message: 'Failed to book appointment'
+    });
   }
 };
+
 
 // ─────────────────────────────────────────────
 // GET /api/appointments
